@@ -197,13 +197,62 @@ router.post("/products/:id/variants", authMiddleware, adminOnly, async (req, res
  */
 router.put("/products/:id/variants/:variantId", authMiddleware, adminOnly, async (req, res) => {
     const variantId = Number(req.params.variantId);
-    const { sku, stock, cost } = req.body;
+    const { sku, salePrice, promotionPrice, cost, images } = req.body;
+
+    console.log(`✏️ Actualizando variante ${variantId}`, { sku, salePrice, promotionPrice, cost, imagesCount: images?.length });
+
+    // Debug: ver todas las imágenes recibidas
+    if (images && images.length > 0) {
+        console.log('  📸 Imágenes recibidas:');
+        images.forEach((img, i) => {
+            console.log(`    ${i + 1}. url=${img.url?.substring(0, 60)}...`);
+        });
+    }
+
+    const updateData = {};
+    if (sku !== undefined) updateData.sku = sku;
+    if (salePrice !== undefined) updateData.salePrice = Number(salePrice);
+    if (promotionPrice !== undefined) updateData.promotionPrice = promotionPrice ? Number(promotionPrice) : null;
+    if (cost !== undefined) updateData.cost = cost ? Number(cost) : null;
+
+    // Manejar imágenes: eliminar las existentes y crear las nuevas
+    if (images !== undefined) {
+        console.log('  🖼️ Actualizando imágenes de la variante...');
+        // Eliminar imágenes existentes
+        await prisma.variantImage.deleteMany({
+            where: { variantId }
+        });
+        console.log('    ✅ Imágenes existentes eliminadas');
+
+        // Crear nuevas imágenes
+        if (images.length > 0) {
+            updateData.images = {
+                create: images.map(img => ({ url: img.url }))
+            };
+            console.log(`    ✅ Creando ${images.length} nuevas imágenes...`);
+            console.log('    📋 Array a crear:', images.map(img => ({ url: img.url })));
+        }
+    }
 
     const updated = await prisma.productVariant.update({
         where: { id: variantId },
-        data: { sku, stock, cost }
+        data: updateData,
+        include: {
+            images: true,
+            stock: true,
+            attributeValues: {
+                include: {
+                    attributeValue: {
+                        include: {
+                            attribute: true
+                        }
+                    }
+                }
+            }
+        }
     });
 
+    console.log('✅ Variante actualizada:', updated.sku);
     res.json(updated);
 });
 

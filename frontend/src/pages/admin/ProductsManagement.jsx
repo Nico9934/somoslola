@@ -1,0 +1,217 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { productsService } from '../../api/products';
+import AdminLayout from '../../components/admin/AdminLayout';
+import AdminPageLayout from '../../components/admin/AdminPageLayout';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Spinner from '../../components/ui/Spinner';
+
+export default function ProductsManagement() {
+    const navigate = useNavigate();
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    useEffect(() => {
+        loadData();
+    }, []);
+
+    const loadData = async () => {
+        try {
+            const productsData = await productsService.getAll();
+            setProducts(productsData);
+        } catch (error) {
+            console.error('Error loading data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+
+        try {
+            await productsService.delete(id);
+            loadData();
+        } catch (error) {
+            alert('Error al eliminar producto');
+        }
+    };
+
+    const filteredProducts = products.filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.category?.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (loading) {
+        return (
+            <AdminLayout>
+                <div className="flex justify-center items-center h-64">
+                    <Spinner size="lg" />
+                </div>
+            </AdminLayout>
+        );
+    }
+
+    return (
+        <AdminLayout>
+            <AdminPageLayout
+                title="Productos"
+                searchTerm={searchTerm}
+                onSearchChange={(e) => setSearchTerm(e.target.value)}
+                onCreateClick={() => navigate('/admin/products/new')}
+            >
+                <div className="grid gap-4">
+                    {filteredProducts.map((product) => (
+                        <Card key={product.id}>
+                            <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                    <h3 className="text-xl font-semibold text-primary">{product.name}</h3>
+                                    <p className="text-sm text-muted mb-2">{product.category?.name}</p>
+                                    <p className="text-muted mb-2">{product.description}</p>
+                                    {product.variants && product.variants.length > 0 && (
+                                        <div className="mt-2">
+                                            {(() => {
+                                                const hasPromotion = product.variants.some(v => v.promotionPrice);
+                                                const minSalePrice = Math.min(...product.variants.map(v => v.salePrice));
+                                                const maxSalePrice = Math.max(...product.variants.map(v => v.salePrice));
+                                                const minPromoPrice = hasPromotion ? Math.min(...product.variants.filter(v => v.promotionPrice).map(v => v.promotionPrice)) : null;
+                                                const maxPromoPrice = hasPromotion ? Math.max(...product.variants.filter(v => v.promotionPrice).map(v => v.promotionPrice)) : null;
+
+                                                return (
+                                                    <div className="flex items-center gap-3">
+                                                        {hasPromotion ? (
+                                                            <>
+                                                                {/* Precio original tachado */}
+                                                                <p className="text-md text-gray-400 line-through">
+                                                                    ${minSalePrice.toLocaleString()}
+                                                                    {product.variants.length > 1 && maxSalePrice !== minSalePrice && ` - $${maxSalePrice.toLocaleString()}`}
+                                                                </p>
+                                                                {/* Precio promocional destacado */}
+                                                                <p className="text-lg font-bold text-red-600">
+                                                                    ${minPromoPrice.toLocaleString()}
+                                                                    {product.variants.length > 1 && maxPromoPrice !== minPromoPrice && ` - $${maxPromoPrice.toLocaleString()}`}
+                                                                </p>
+                                                                <span className="text-xs font-semibold bg-red-100 text-red-600 px-2 py-1 rounded">
+                                                                    EN PROMO
+                                                                </span>
+                                                            </>
+                                                        ) : (
+                                                            /* Precio normal */
+                                                            <p className="text-lg font-bold text-secondary">
+                                                                ${minSalePrice.toLocaleString()}
+                                                                {product.variants.length > 1 && maxSalePrice !== minSalePrice && ` - $${maxSalePrice.toLocaleString()}`}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* Previsualización de Variantes */}
+                                            <div className="mt-3 flex items-center gap-2 flex-wrap">
+                                                <span className="text-xs font-medium text-gray-500">Variantes:</span>
+                                                {(() => {
+                                                    // Agrupar valores de atributos únicos
+                                                    const attributesMap = {};
+
+                                                    product.variants.forEach(variant => {
+                                                        variant.attributeValues?.forEach(av => {
+                                                            const attrName = av.attributeValue.attribute.name;
+                                                            const value = av.attributeValue;
+
+                                                            if (!attributesMap[attrName]) {
+                                                                attributesMap[attrName] = [];
+                                                            }
+
+                                                            // Evitar duplicados
+                                                            if (!attributesMap[attrName].some(v => v.id === value.id)) {
+                                                                attributesMap[attrName].push(value);
+                                                            }
+                                                        });
+                                                    });
+
+                                                    const colorAttr = attributesMap['Color'] || attributesMap['color'];
+                                                    const otherAttrs = Object.entries(attributesMap).filter(
+                                                        ([name]) => name.toLowerCase() !== 'color'
+                                                    );
+
+                                                    return (
+                                                        <>
+                                                            {/* Círculos de colores */}
+                                                            {colorAttr && colorAttr.length > 0 && (
+                                                                <div className="flex items-center gap-1">
+                                                                    {colorAttr.slice(0, 6).map(color => (
+                                                                        <div
+                                                                            key={color.id}
+                                                                            className="w-6 h-6 rounded-full border-2 border-gray-300 shadow-sm"
+                                                                            style={{ backgroundColor: color.hexColor || '#ccc' }}
+                                                                            title={color.value}
+                                                                        />
+                                                                    ))}
+                                                                    {colorAttr.length > 6 && (
+                                                                        <span className="text-xs font-medium text-gray-500">
+                                                                            +{colorAttr.length - 6}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            )}
+
+                                                            {/* Badges de otros atributos */}
+                                                            {otherAttrs.map(([attrName, values]) => (
+                                                                <div key={attrName} className="flex items-center gap-1">
+                                                                    <span className="text-xs font-medium text-gray-500">{attrName}:</span>
+                                                                    {values.slice(0, 4).map(value => (
+                                                                        <span
+                                                                            key={value.id}
+                                                                            className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200"
+                                                                        >
+                                                                            {value.value}
+                                                                        </span>
+                                                                    ))}
+                                                                    {values.length > 4 && (
+                                                                        <span className="text-xs font-medium text-gray-500">
+                                                                            +{values.length - 4}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+
+                                                            {/* Total de variantes y stock */}
+                                                            <span className="text-xs text-gray-400">
+                                                                • {product.variants.length} total
+                                                            </span>
+                                                        </>
+                                                    );
+                                                })()}
+                                                <span className="text-xs text-gray-400">
+                                                    • Stock: {product.variants.reduce((sum, v) => sum + (v.stock?.quantity || 0), 0)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => navigate(`/admin/products/edit/${product.id}`)}
+                                    >
+                                        Editar
+                                    </Button>
+                                    <Button
+                                        variant="danger"
+                                        size="sm"
+                                        onClick={() => handleDelete(product.id)}
+                                    >
+                                        Eliminar
+                                    </Button>
+                                </div>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+            </AdminPageLayout>
+        </AdminLayout>
+    );
+}

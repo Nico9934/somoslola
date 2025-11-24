@@ -1,3 +1,31 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    :root {
+        --color-primary: 17 24 39;
+        --color-secondary: 249 115 22;
+        --color-accent: 249 115 22;
+    }
+
+    body {
+        @apply bg-background text-primary;
+    }
+}
+
+/* Animación para el banner corredizo */
+@keyframes scroll {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.animate-scroll {
+    display: inline-block;
+    animation: scroll 30s linear infinite;
+}

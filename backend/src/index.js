@@ -7,6 +7,8 @@ import productRoutes from "./routes/products.js";
 import variantsRoutes from "./routes/variants.js";
 import ordersRoutes from "./routes/orders.js";
 import dashboardRoutes from "./routes/dashboard.js";
+import attributesRoutes from "./routes/attributes.js";
+import uploadRoutes from "./routes/upload.js";
 
 import { swaggerUi, swaggerSpec } from "./swagger.js";
 import cartRoutes from "./routes/cart.js";
@@ -22,9 +24,11 @@ app.use("/auth", authRoutes);
 app.use("/categories", categoryRoutes);
 app.use("/products", productRoutes);
 app.use("/variants", variantsRoutes); // 👈 SOLO ESTA PARA VARIANTS
+app.use("/attributes", attributesRoutes);
 app.use("/orders", ordersRoutes);
 app.use("/cart", cartRoutes);
 app.use("/dashboard", dashboardRoutes);
+app.use("/upload", uploadRoutes);
 
 // Swagger Docs
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
