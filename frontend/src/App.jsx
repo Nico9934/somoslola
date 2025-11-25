@@ -13,6 +13,8 @@ import Register from './pages/auth/Register';
 import Products from './pages/customer/Products';
 import ProductDetail from './pages/customer/ProductDetail';
 import Cart from './pages/customer/Cart';
+import Checkout from './pages/customer/Checkout';
+import OrderConfirmation from './pages/customer/OrderConfirmation';
 import Orders from './pages/customer/Orders';
 
 // Admin
@@ -20,8 +22,11 @@ import Dashboard from './pages/admin/Dashboard';
 import ProductsManagement from './pages/admin/ProductsManagement';
 import ProductFormUnified from './pages/admin/ProductFormUnified';
 import CategoriesManagement from './pages/admin/CategoriesManagement';
+import BrandsManagement from './pages/admin/BrandsManagement';
 import AttributesManagement from './pages/admin/AttributesManagement';
 import OrdersManagement from './pages/admin/OrdersManagement';
+import ShippingZonesManagement from './pages/admin/ShippingZonesManagement';
+import HeroBannersManagement from './pages/admin/HeroBannersManagement';
 
 export default function App() {
   return (
@@ -41,6 +46,22 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Cart />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/checkout"
+              element={
+                <ProtectedRoute>
+                  <Checkout />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/order-confirmation/:orderId"
+              element={
+                <ProtectedRoute>
+                  <OrderConfirmation />
                 </ProtectedRoute>
               }
             />
@@ -95,6 +116,14 @@ export default function App() {
               }
             />
             <Route
+              path="/admin/brands"
+              element={
+                <ProtectedRoute adminOnly>
+                  <BrandsManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/admin/attributes"
               element={
                 <ProtectedRoute adminOnly>
@@ -107,6 +136,22 @@ export default function App() {
               element={
                 <ProtectedRoute adminOnly>
                   <OrdersManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/shipping-zones"
+              element={
+                <ProtectedRoute adminOnly>
+                  <ShippingZonesManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/hero-banners"
+              element={
+                <ProtectedRoute adminOnly>
+                  <HeroBannersManagement />
                 </ProtectedRoute>
               }
             />

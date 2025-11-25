@@ -10,7 +10,6 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Spinner from '../../components/ui/Spinner';
 import { Trash2, Plus, AlertCircle } from 'lucide-react';
-import { toast } from 'react-toastify';
 
 /**
  * 📝 FORMULARIO UNIFICADO DE PRODUCTO
@@ -46,6 +45,7 @@ export default function ProductFormUnified() {
     // ============================================================================
     const [loading, setLoading] = useState(false);
     const [categories, setCategories] = useState([]);
+    const [brands, setBrands] = useState([]);
     const [attributes, setAttributes] = useState([]);
     const [uploadingVariantIndex, setUploadingVariantIndex] = useState(null);
 
@@ -55,7 +55,7 @@ export default function ProductFormUnified() {
         const currentImages = variants[variantIndex].images || [];
 
         if (currentImages.length + fileArray.length > 5) {
-            toast.warning('Máximo 5 imágenes por variante');
+            alert('Máximo 5 imágenes por variante');
             return;
         }
 
@@ -82,7 +82,7 @@ export default function ProductFormUnified() {
             setVariants(newVariants);
         } catch (error) {
             console.error('Error uploading images:', error);
-            toast.error('Error al subir imágenes: ' + (error.response?.data?.error || error.message));
+            alert('Error al subir imágenes: ' + (error.response?.data?.error || error.message));
         } finally {
             setUploadingVariantIndex(null);
         }
@@ -101,7 +101,7 @@ export default function ProductFormUnified() {
             setVariants(newVariants);
         } catch (error) {
             console.error('Error deleting image:', error);
-            toast.error('Error al eliminar imagen');
+            alert('Error al eliminar imagen');
         }
     };
 
@@ -110,6 +110,7 @@ export default function ProductFormUnified() {
         name: '',
         description: '',
         categoryId: '',
+        brandId: '',
     });
 
     // 🎯 Atributos seleccionados: { attributeId: [valueId1, valueId2, ...] }
@@ -125,8 +126,7 @@ export default function ProductFormUnified() {
     /**
      * Extrae el publicId de una URL de Cloudinary
      */
-    const extractPublicIdFromUrl = (url) => {
-        if (!url) return '';
+    const extractPublicId = (url) => {
         const urlParts = url.split('/');
         const filename = urlParts[urlParts.length - 1]; // abc123.jpg
         const folder = urlParts.slice(-2, -1)[0]; // products
@@ -142,14 +142,17 @@ export default function ProductFormUnified() {
         setLoading(true);
         try {
             // 1️⃣ Cargar categorías y atributos disponibles
-            const [categoriesData, attributesData] = await Promise.all([
+            const [categoriesData, attributesData, brandsData] = await Promise.all([
                 categoriesService.getAll(),
                 attributesService.getAll(),
+                api.get('/brands'),
             ]);
             setCategories(categoriesData);
             setAttributes(attributesData);
+            setBrands(brandsData.data);
             console.log('✅ Categorías cargadas:', categoriesData.length);
             console.log('✅ Atributos cargados:', attributesData.length);
+            console.log('✅ Marcas cargadas:', brandsData.data.length);
 
             // 2️⃣ Si estamos EDITANDO, cargar producto existente
             if (id) {
@@ -162,6 +165,7 @@ export default function ProductFormUnified() {
                     name: product.name,
                     description: product.description || '',
                     categoryId: product.categoryId,
+                    brandId: product.brandId || '',
                 });
 
                 // 2.2 Cargar variantes existentes
@@ -181,7 +185,7 @@ export default function ProductFormUnified() {
                         // Mapear imágenes existentes
                         const images = v.images?.map(img => ({
                             url: img.url,
-                            publicId: extractPublicIdFromUrl(img.url)
+                            publicId: extractPublicId(img.url)
                         })) || [];
 
                         return {
@@ -207,7 +211,7 @@ export default function ProductFormUnified() {
             }
         } catch (error) {
             console.error('❌ Error loading data:', error);
-            toast.error('Error al cargar los datos: ' + (error.message || 'Error desconocido'));
+            alert('Error al cargar los datos');
         } finally {
             setLoading(false);
         }
@@ -485,6 +489,7 @@ export default function ProductFormUnified() {
                     name: formData.name,
                     description: formData.description,
                     categoryId: parseInt(formData.categoryId),
+                    brandId: formData.brandId ? parseInt(formData.brandId) : null,
                 });
                 console.log('✅ Datos básicos actualizados');
 
@@ -537,6 +542,7 @@ export default function ProductFormUnified() {
                     name: formData.name,
                     description: formData.description,
                     categoryId: parseInt(formData.categoryId),
+                    brandId: formData.brandId ? parseInt(formData.brandId) : null,
                     variants: variants.map((v, i) => {
                         console.log(`  Enviando ${i + 1}. ${v.sku} - $${v.salePrice} - ${v.images?.length || 0} imágenes`);
                         return {
@@ -573,11 +579,10 @@ export default function ProductFormUnified() {
                 }
             }
 
-            toast.success('Producto guardado exitosamente');
             navigate('/admin/products');
         } catch (error) {
             console.error('❌ Error al guardar producto:', error);
-            toast.error('Error al guardar producto: ' + (error.response?.data?.error || error.message));
+            alert('Error al guardar producto: ' + (error.response?.data?.error || error.message));
         }
     };
 
@@ -652,10 +657,23 @@ export default function ProductFormUnified() {
                                     required
                                 >
                                     <option value="">Selecciona una categoría</option>
-                                    {categories.map((cat) => (
-                                        <option key={cat.id} value={cat.id}>
-                                            {cat.name}
-                                        </option>
+                                    {categories.map(cat => (
+                                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Marca (opcional)
+                                </label>
+                                <select
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    value={formData.brandId}
+                                    onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}
+                                >
+                                    <option value="">Sin marca</option>
+                                    {brands.map(brand => (
+                                        <option key={brand.id} value={brand.id}>{brand.name}</option>
                                     ))}
                                 </select>
                             </div>
@@ -868,41 +886,55 @@ export default function ProductFormUnified() {
                                                         </span>
                                                     </td>
                                                     <td className="px-4 py-3">
-                                                        <div className="flex flex-col gap-2 min-w-[200px]">
-                                                            {/* Botón de subir */}
-                                                            <label className="cursor-pointer">
+                                                        {/* Contenedor horizontal: dropzone + imágenes */}
+                                                        <div className="flex items-start gap-3 min-w-[200px]">
+                                                            {/* Dropzone cuadrado */}
+                                                            <div
+                                                                className="w-16 h-16 border-2 border-dashed border-secondary rounded-lg 
+                                                                           flex flex-col items-center justify-center text-secondary 
+                                                                           text-[10px] cursor-pointer hover:bg-secondary/10 transition-all
+                                                                           flex-shrink-0"
+                                                                onClick={() => document.getElementById(`variant-file-${index}`).click()}
+                                                                onDragOver={(e) => e.preventDefault()}
+                                                                onDrop={(e) => {
+                                                                    e.preventDefault();
+                                                                    const files = e.dataTransfer.files;
+                                                                    if (files.length > 0) {
+                                                                        handleVariantImageUpload(index, files);
+                                                                    }
+                                                                }}
+                                                            >
                                                                 <input
+                                                                    id={`variant-file-${index}`}
                                                                     type="file"
                                                                     accept="image/*"
                                                                     multiple
-                                                                    onChange={(e) => handleVariantImageUpload(index, e.target.files)}
                                                                     className="hidden"
                                                                     disabled={uploadingVariantIndex === index}
+                                                                    onChange={(e) => handleVariantImageUpload(index, e.target.files)}
                                                                 />
-                                                                <div className="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-secondary border border-secondary rounded-lg hover:bg-secondary/10 transition-colors shadow-sm">
-                                                                    {uploadingVariantIndex === index ? (
-                                                                        <>
-                                                                            <span className="animate-spin">⌛</span>
-                                                                            <span>Subiendo...</span>
-                                                                        </>
-                                                                    ) : (
-                                                                        <>
-                                                                            <span>📷</span>
-                                                                            <span>Subir ({variant.images?.length || 0}/5)</span>
-                                                                        </>
-                                                                    )}
-                                                                </div>
-                                                            </label>
+
+                                                                {uploadingVariantIndex === index ? (
+                                                                    <span className="animate-spin text-lg">⌛</span>
+                                                                ) : (
+                                                                    <>
+                                                                        <span className="text-2xl leading-none font-light">+</span>
+                                                                        <span className="text-[9px] opacity-60 mt-1">
+                                                                            {variant.images?.length || 0}/5
+                                                                        </span>
+                                                                    </>
+                                                                )}
+                                                            </div>
 
                                                             {/* Previews de imágenes con scroll horizontal */}
                                                             {variant.images && variant.images.length > 0 && (
-                                                                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                                                                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 max-w-[300px]">
                                                                     {variant.images.map((img, imgIdx) => (
                                                                         <div key={imgIdx} className="relative group flex-shrink-0">
                                                                             <img
                                                                                 src={img.url}
                                                                                 alt={`Img ${imgIdx + 1}`}
-                                                                                className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200 hover:border-secondary transition-colors shadow-sm"
+                                                                                className="w-16 h-16 object-contain rounded-lg border-2 border-gray-200 hover:border-secondary transition-colors shadow-sm"
                                                                             />
                                                                             <button
                                                                                 type="button"

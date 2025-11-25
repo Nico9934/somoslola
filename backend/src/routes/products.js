@@ -28,13 +28,35 @@ const router = express.Router();
  *               items:
  *                 type: object
  */
-router.get("/", async (_, res) => {
-    console.log('\n📋 GET /products - Listar todos los productos');
+router.get("/", async (req, res) => {
+    console.log('\n📋 GET /products - Listar productos con filtros');
+
+    const { categoryId, brandId, search } = req.query;
+
+    // Construir filtros dinámicamente
+    const where = {};
+
+    if (categoryId) {
+        where.categoryId = Number(categoryId);
+    }
+
+    if (brandId) {
+        where.brandId = Number(brandId);
+    }
+
+    if (search) {
+        where.name = {
+            contains: search,
+            mode: 'insensitive'
+        };
+    }
+
     const products = await prisma.product.findMany({
+        where,
         include: {
             variants: {
                 include: {
-                    images: true, // Imágenes de cada variante
+                    images: true,
                     stock: true,
                     attributeValues: {
                         include: {
@@ -48,6 +70,7 @@ router.get("/", async (_, res) => {
                 }
             },
             category: true,
+            brand: true, // Incluir marca
             attributes: {
                 include: {
                     attribute: {
@@ -59,19 +82,8 @@ router.get("/", async (_, res) => {
             }
         },
     });
-    console.log(`✅ Retornando ${products.length} productos`);
 
-    // Debug: verificar imágenes
-    products.forEach(p => {
-        const totalImages = p.variants.reduce((sum, v) => sum + (v.images?.length || 0), 0);
-        console.log(`   📦 [ID:${p.id}] ${p.name}: ${p.variants.length} variantes, ${totalImages} imágenes totales`);
-        if (totalImages === 0 && p.variants.length > 0) {
-            p.variants.forEach((v, i) => {
-                console.log(`      V${i} (ID:${v.id}): images array length = ${v.images?.length || 0}`);
-            });
-        }
-    });
-
+    console.log(`✅ Retornando ${products.length} productos (Filtros: cat=${categoryId}, brand=${brandId}, search='${search}')`);
     res.json(products);
 });
 
@@ -101,6 +113,7 @@ router.get("/:id", async (req, res) => {
     const product = await prisma.product.findUnique({
         where: { id },
         include: {
+            brand: true,
             variants: {
                 include: {
                     images: true, // Imágenes de cada variante
@@ -192,8 +205,8 @@ router.get("/:id", async (req, res) => {
  */
 router.post("/", authMiddleware, adminOnly, async (req, res) => {
     console.log('\\n➕ POST /products - Crear nuevo producto');
-    const { name, description, categoryId, variants, images } = req.body;
-    console.log('Datos recibidos:', { name, categoryId, variantsCount: variants?.length || 0, imagesCount: images?.length || 0 });
+    const { name, description, categoryId, brandId, variants, images } = req.body;
+    console.log('Datos recibidos:', { name, categoryId, brandId, variantsCount: variants?.length || 0, imagesCount: images?.length || 0 });
 
     if (!variants || !Array.isArray(variants) || variants.length === 0) {
         console.log('❌ Validación fallida: sin variantes');
@@ -237,6 +250,7 @@ router.post("/", authMiddleware, adminOnly, async (req, res) => {
             name,
             description,
             categoryId: Number(categoryId),
+            brandId: brandId ? Number(brandId) : null,
             variants: {
                 create: variants.map((v) => ({
                     sku: v.sku,
@@ -326,8 +340,8 @@ router.put("/:id", authMiddleware, adminOnly, async (req, res) => {
     try {
         const id = Number(req.params.id);
         console.log(`\n✏️ PUT /products/${id} - Actualizar producto`);
-        const { name, description, categoryId } = req.body;
-        console.log('  Datos recibidos:', { name, description, categoryId });
+        const { name, description, categoryId, brandId } = req.body;
+        console.log('  Datos recibidos:', { name, description, categoryId, brandId });
 
         // Solo actualiza campos básicos del producto
         // Para actualizar variantes e imágenes, usar endpoints específicos de variantes
@@ -336,6 +350,7 @@ router.put("/:id", authMiddleware, adminOnly, async (req, res) => {
         if (name !== undefined) updateData.name = name;
         if (description !== undefined) updateData.description = description;
         if (categoryId !== undefined) updateData.categoryId = categoryId;
+        if (brandId !== undefined) updateData.brandId = brandId ? Number(brandId) : null;
 
         console.log('  Campos a actualizar:', Object.keys(updateData));
         console.log('  💾 Guardando cambios en base de datos...');
@@ -345,6 +360,7 @@ router.put("/:id", authMiddleware, adminOnly, async (req, res) => {
             data: updateData,
             include: {
                 images: true,
+                brand: true,
                 variants: {
                     include: {
                         stock: true,

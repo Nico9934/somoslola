@@ -12,7 +12,10 @@ import {
     LogOut,
     User,
     X,
-    Menu
+    Menu,
+    Truck,
+    Tag,
+    Image
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
@@ -20,8 +23,11 @@ const navigation = [
     { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { label: 'Productos', href: '/admin/products', icon: Package },
     { label: 'Categorías', href: '/admin/categories', icon: FolderTree },
+    { label: 'Marcas', href: '/admin/brands', icon: Tag },
     { label: 'Atributos', href: '/admin/attributes', icon: FolderTree },
     { label: 'Pedidos', href: '/admin/orders', icon: ShoppingCart },
+    { label: 'Zonas de Envío', href: '/admin/shipping-zones', icon: Truck },
+    { label: 'Hero Banners', href: '/admin/hero-banners', icon: Image },
 ];
 
 export default function AdminSidebar({ variant = 'desktop' }) {
@@ -180,7 +186,7 @@ export default function AdminSidebar({ variant = 'desktop' }) {
                         variant="ghost"
                         onClick={handleLogout}
                         className={cn(
-                            'w-full text-gray-300 hover:text-red-400 hover:bg-red-400/10',
+                            'w-full text-gray-300 flex items-center justify-center hover:text-red-400 hover:bg-red-400/10',
                             !isExpanded ? 'justify-center px-0' : 'justify-start gap-3'
                         )}
                     >

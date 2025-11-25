@@ -349,7 +349,8 @@ export default function AttributesManagement() {
                         placeholder="Ej: Rojo, XL, 500"
                     />
 
-                    {selectedAttribute?.type === 'SELECT' && (
+                    {/* Mostrar color picker si es un atributo de tipo SELECT o si el nombre contiene "color" */}
+                    {(selectedAttribute?.type === 'SELECT' || selectedAttribute?.name?.toLowerCase().includes('color')) && (
                         <div>
                             <label className="block text-sm font-medium text-primary mb-1">
                                 Color Hexadecimal (opcional)

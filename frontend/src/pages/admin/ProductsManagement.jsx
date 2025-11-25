@@ -1,17 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { productsService } from '../../api/products';
+import { categoriesService } from '../../api/categories';
+import api from '../../api/axios';
 import AdminLayout from '../../components/admin/AdminLayout';
 import AdminPageLayout from '../../components/admin/AdminPageLayout';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
+import { X } from 'lucide-react';
 
 export default function ProductsManagement() {
     const navigate = useNavigate();
     const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [brands, setBrands] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [filters, setFilters] = useState({
+        categoryId: '',
+        brandId: '',
+        outOfStock: false
+    });
 
     useEffect(() => {
         loadData();
@@ -19,8 +29,14 @@ export default function ProductsManagement() {
 
     const loadData = async () => {
         try {
-            const productsData = await productsService.getAll();
+            const [productsData, categoriesData, brandsData] = await Promise.all([
+                productsService.getAll(),
+                categoriesService.getAll(),
+                api.get('/brands')
+            ]);
             setProducts(productsData);
+            setCategories(categoriesData);
+            setBrands(brandsData.data);
         } catch (error) {
             console.error('Error loading data:', error);
         } finally {
@@ -39,10 +55,46 @@ export default function ProductsManagement() {
         }
     };
 
-    const filteredProducts = products.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category?.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredProducts = products.filter(product => {
+        // Filtro por búsqueda de texto
+        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            product.category?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            product.brand?.name.toLowerCase().includes(searchTerm.toLowerCase());
+
+        if (!matchesSearch) return false;
+
+        // Filtro por categoría
+        if (filters.categoryId && product.categoryId !== Number(filters.categoryId)) {
+            return false;
+        }
+
+        // Filtro por marca
+        if (filters.brandId && product.brandId !== Number(filters.brandId)) {
+            return false;
+        }
+
+        // Filtro por sin stock
+        if (filters.outOfStock) {
+            const hasStock = product.variants?.some(v => v.stock > 0);
+            if (hasStock) return false;
+        }
+
+        return true;
+    });
+
+    const handleFilterChange = (filterName, value) => {
+        setFilters(prev => ({ ...prev, [filterName]: value }));
+    };
+
+    const handleClearFilters = () => {
+        setFilters({
+            categoryId: '',
+            brandId: '',
+            outOfStock: false
+        });
+    };
+
+    const hasActiveFilters = filters.categoryId || filters.brandId || filters.outOfStock;
 
     if (loading) {
         return (
@@ -62,6 +114,76 @@ export default function ProductsManagement() {
                 onSearchChange={(e) => setSearchTerm(e.target.value)}
                 onCreateClick={() => navigate('/admin/products/new')}
             >
+                {/* Barra de filtros */}
+                <div className="mb-6 bg-white rounded-lg shadow-sm p-4">
+                    <div className="flex flex-wrap gap-4 items-end">
+                        {/* Filtro por Categoría */}
+                        <div className="flex-1 min-w-[200px]">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Categoría
+                            </label>
+                            <select
+                                value={filters.categoryId}
+                                onChange={(e) => handleFilterChange('categoryId', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                            >
+                                <option value="">Todas las categorías</option>
+                                {categories.map(cat => (
+                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Filtro por Marca */}
+                        <div className="flex-1 min-w-[200px]">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Marca
+                            </label>
+                            <select
+                                value={filters.brandId}
+                                onChange={(e) => handleFilterChange('brandId', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                            >
+                                <option value="">Todas las marcas</option>
+                                {brands.map(brand => (
+                                    <option key={brand.id} value={brand.id}>{brand.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Filtro Sin Stock */}
+                        <div className="flex items-center">
+                            <label className="flex items-center cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={filters.outOfStock}
+                                    onChange={(e) => handleFilterChange('outOfStock', e.target.checked)}
+                                    className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary mr-2"
+                                />
+                                <span className="text-sm font-medium text-gray-700">Solo sin stock</span>
+                            </label>
+                        </div>
+
+                        {/* Botón Limpiar Filtros */}
+                        {hasActiveFilters && (
+                            <div>
+                                <button
+                                    onClick={handleClearFilters}
+                                    className="px-4 py-2 text-sm text-primary hover:text-secondary flex items-center gap-1 border border-primary rounded-lg hover:bg-primary hover:text-white transition-colors"
+                                >
+                                    <X className="w-4 h-4" />
+                                    Limpiar filtros
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Contador de resultados */}
+                    <div className="mt-3 text-sm text-gray-600">
+                        Mostrando <span className="font-semibold">{filteredProducts.length}</span> de {products.length} productos
+                    </div>
+                </div>
+
                 <div className="grid gap-4">
                     {filteredProducts.map((product) => (
                         <Card key={product.id}>

@@ -10,7 +10,7 @@ const storage = multer.memoryStorage();
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB máximo
+        fileSize: 10 * 1024 * 1024, // 10MB máximo
     },
     fileFilter: (req, file, cb) => {
         // Solo permitir imágenes
@@ -94,6 +94,14 @@ router.post('/product-image', authMiddleware, adminOnly, upload.single('image'),
         });
     } catch (error) {
         console.error('❌ Error al subir imagen:', error);
+
+        // Manejar errores específicos de Multer
+        if (error.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({
+                error: 'El archivo es demasiado grande. Máximo 10MB permitido.'
+            });
+        }
+
         res.status(500).json({ error: 'Error al subir la imagen' });
     }
 });
@@ -136,6 +144,24 @@ router.delete('/delete-image', authMiddleware, adminOnly, async (req, res) => {
         console.error('❌ Error al eliminar imagen:', error);
         res.status(500).json({ error: 'Error al eliminar la imagen' });
     }
+});
+
+// Middleware para manejar errores de Multer
+router.use((error, req, res, next) => {
+    if (error instanceof multer.MulterError) {
+        if (error.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({
+                error: 'El archivo es demasiado grande. Máximo 10MB permitido.'
+            });
+        }
+        return res.status(400).json({ error: error.message });
+    }
+
+    if (error) {
+        return res.status(400).json({ error: error.message });
+    }
+
+    next();
 });
 
 export default router;

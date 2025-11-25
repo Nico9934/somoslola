@@ -1,9 +1,12 @@
 import api from './axios';
 
 export const ordersService = {
-    async checkout(cartId, email) {
-        const { data } = await api.post('/orders/checkout', { cartId, email });
-        return data;
+    async calculateShipping(postalCode) {
+        return await api.post('/orders/calculate-shipping', { postalCode });
+    },
+
+    async createOrder(orderData) {
+        return await api.post('/orders/checkout', orderData);
     },
 
     async getAll() {
@@ -11,7 +14,7 @@ export const ordersService = {
         return data;
     },
 
-    async getById(id) {
+    async getOrderById(id) {
         const { data } = await api.get(`/orders/${id}`);
         return data;
     },
@@ -21,3 +24,4 @@ export const ordersService = {
         return data;
     },
 };
+

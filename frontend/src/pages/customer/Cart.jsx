@@ -52,17 +52,8 @@ export default function Cart() {
             return;
         }
 
-        const email = user?.email || prompt('Ingresa tu email para continuar:');
-        if (!email) return;
-
-        try {
-            await ordersService.checkout(cart.id, email);
-            clearCart();
-            toast.success('🎉 ¡Orden creada exitosamente!');
-            navigate('/orders');
-        } catch (error) {
-            toast.error(error.response?.data?.error || 'Error al procesar la orden');
-        }
+        // Redirigir al nuevo flujo de checkout
+        navigate('/checkout');
     };
 
     const total = cart?.items?.reduce(

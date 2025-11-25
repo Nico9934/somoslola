@@ -14,6 +14,48 @@ const router = express.Router();
 
 /**
  * @swagger
+ * /orders/calculate-shipping:
+ *   post:
+ *     summary: Calcula costo de envío según código postal
+ *     tags: [Orders]
+ */
+router.post("/calculate-shipping", async (req, res) => {
+    try {
+        const { postalCode } = req.body;
+        const cp = Number(postalCode);
+
+        if (!cp) {
+            return res.status(400).json({ error: "Código postal inválido" });
+        }
+
+        // Buscar zona de envío que coincida con el CP
+        const zone = await prisma.shippingZone.findFirst({
+            where: {
+                OR: [
+                    { cpStart: { lte: cp }, cpEnd: { gte: cp } },
+                    { cpStart: null } // Interior del país (fallback)
+                ]
+            },
+            orderBy: [
+                { cpStart: 'asc' } // Priorizar zonas específicas sobre fallback
+            ]
+        });
+
+        if (!zone) {
+            // Fallback por si no hay zonas configuradas
+            return res.json({ shippingCost: 6000 });
+        }
+
+        console.log(`📦 Costo de envío para CP ${cp}: $${zone.price} (${zone.name})`);
+        return res.json({ shippingCost: zone.price });
+    } catch (error) {
+        console.error("❌ Error al calcular envío:", error);
+        res.status(500).json({ error: "Error al calcular envío" });
+    }
+});
+
+/**
+ * @swagger
  * /orders/checkout:
  *   post:
  *     summary: Genera una orden desde carrito (guest o usuario)
@@ -22,21 +64,41 @@ const router = express.Router();
 router.post("/checkout", async (req, res) => {
     try {
         const userId = req.user?.id ?? null;
-        const { cartId, email } = req.body;
+        const {
+            cartId,
+            email,
+            customerName,
+            customerPhone,
+            shippingAddress,
+            shippingCity,
+            shippingState,
+            shippingPostalCode,
+            shippingCost,
+            paymentMethod
+        } = req.body;
 
-        // Guest requiere ambos datos
-        if (!userId && (!email || !cartId)) {
-            return res.status(400).json({ error: "Guest checkout requiere email y cartId" });
+        // Validaciones de campos requeridos
+        if (!cartId || !email || !customerName || !customerPhone ||
+            !shippingAddress || !shippingCity || !shippingState ||
+            !shippingPostalCode || shippingCost === undefined || !paymentMethod) {
+            return res.status(400).json({ error: "Faltan datos requeridos para el checkout" });
         }
 
-        // Obtener carrito
+        if (!["CARD", "TRANSFER"].includes(paymentMethod)) {
+            return res.status(400).json({ error: "Método de pago inválido" });
+        }
+
+        // Obtener carrito con todos los datos necesarios para snapshot
         const cart = await prisma.cart.findUnique({
             where: { id: cartId },
             include: {
                 items: {
                     include: {
                         variant: {
-                            include: { product: true },
+                            include: {
+                                product: true,
+                                images: true, // Para snapshot de imagen
+                            },
                         },
                     },
                 },
@@ -56,17 +118,28 @@ router.post("/checkout", async (req, res) => {
             }
         }
 
-        // Calcular total REAL basado en cada producto
-        const total = cart.items.reduce(
+        // Calcular total de productos
+        const subtotal = cart.items.reduce(
             (sum, item) => sum + item.variant.product.basePrice * item.quantity,
             0
         );
 
-        // Crear orden
+        // Total final = subtotal + envío
+        const total = subtotal + shippingCost;
+
+        // Crear orden con snapshot de datos para preservar historial
         const order = await prisma.order.create({
             data: {
                 userId,
-                email: userId ? undefined : email,
+                email,
+                customerName,
+                customerPhone,
+                shippingAddress,
+                shippingCity,
+                shippingState,
+                shippingPostalCode,
+                shippingCost,
+                paymentMethod,
                 total,
                 status: "PENDING",
                 items: {
@@ -74,6 +147,11 @@ router.post("/checkout", async (req, res) => {
                         variantId: item.variantId,
                         quantity: item.quantity,
                         price: item.variant.product.basePrice,
+                        // 📸 Snapshot de datos para preservar información
+                        productName: item.variant.product.name,
+                        variantSku: item.variant.sku,
+                        imageUrl: item.variant.images?.[0]?.url || null,
+                        attributes: item.variant.attributes || {},
                     })),
                 },
             },
@@ -91,7 +169,8 @@ router.post("/checkout", async (req, res) => {
         // Vaciar carrito
         await prisma.cartItem.deleteMany({ where: { cartId } });
 
-        return res.json({ message: "Orden creada", order });
+        console.log("✅ Orden creada exitosamente:", order.id, "- Total:", total, "- Método:", paymentMethod);
+        return res.json({ message: "Orden creada exitosamente", order });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Error al procesar checkout" });
