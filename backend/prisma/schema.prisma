@@ -140,14 +140,18 @@ model Order {
   customerPhone      String
   
   // Datos de envío
-  shippingAddress    String
-  shippingCity       String
-  shippingState      String
-  shippingPostalCode String
-  shippingCost       Float       @default(0)
+  shippingAddress       String
+  shippingNeighborhood  String? // Barrio (opcional)
+  shippingCity          String
+  shippingState         String
+  shippingPostalCode    String
+  shippingCost          Float   @default(0)
   
   // Método de pago
   paymentMethod      PaymentMethod
+  paymentId          String?       // ID del pago en Mercado Pago
+  paymentStatus      String?       // Estado del pago: approved, pending, rejected
+  paymentProof       String?       // URL del comprobante de transferencia (solo para TRANSFER)
   
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
@@ -267,4 +271,13 @@ model VariantAttributeValue {
   attributeValue   AttributeValue @relation(fields: [attributeValueId], references: [id], onDelete: Cascade)
 
   @@unique([variantId, attributeId])
+}
+
+model PaymentSettings {
+  id                 Int      @id @default(autoincrement())
+  transferDiscount   Float    @default(20) // Descuento por transferencia en porcentaje
+  installmentsCount  Int      @default(3)  // Cantidad de cuotas sin interés
+  installmentsActive Boolean  @default(true) // Si las cuotas están activas
+  updatedAt          DateTime @updatedAt
+  createdAt          DateTime @default(now())
 }

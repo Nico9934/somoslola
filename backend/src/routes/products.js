@@ -6,6 +6,72 @@ const prisma = new PrismaClient();
 const router = express.Router();
 
 /**
+ * Obtiene la configuración de pagos desde la base de datos
+ */
+const getPaymentSettings = async () => {
+    let settings = await prisma.paymentSettings.findFirst();
+
+    if (!settings) {
+        // Si no existe configuración, crear con valores por defecto
+        settings = await prisma.paymentSettings.create({
+            data: {
+                transferDiscount: 20,
+                installmentsCount: 3,
+                installmentsActive: true
+            }
+        });
+    }
+
+    return settings;
+};
+
+/**
+ * Calcula precios adicionales para cada variante usando la configuración de DB:
+ * - transferPrice: descuento por transferencia (configurable)
+ * - installmentPrice: precio por cuota (configurable)
+ */
+const addCalculatedPrices = async (products) => {
+    // Obtener configuración desde DB
+    const settings = await getPaymentSettings();
+    const transferDiscountPercent = settings.transferDiscount / 100;
+
+    const processVariant = (variant) => {
+        // Usar precio promocional si existe, sino el precio de venta
+        const basePrice = variant.promotionPrice || variant.salePrice;
+
+        return {
+            ...variant,
+            // Precio con descuento por transferencia (sobre el precio final)
+            transferPrice: Math.round(basePrice * (1 - transferDiscountPercent)),
+
+            // Precio por cuota (sobre el precio final: promocional si existe, sino lista)
+            installmentPrice: settings.installmentsActive
+                ? Math.round(basePrice / settings.installmentsCount)
+                : null,
+
+            // Metadata para el frontend
+            paymentOptions: {
+                installments: settings.installmentsCount,
+                installmentsActive: settings.installmentsActive,
+                transferDiscount: settings.transferDiscount
+            }
+        };
+    };
+
+    if (Array.isArray(products)) {
+        return products.map(product => ({
+            ...product,
+            variants: product.variants?.map(processVariant)
+        }));
+    } else {
+        return {
+            ...products,
+            variants: products.variants?.map(processVariant)
+        };
+    }
+};
+
+/**
  * @swagger
  * tags:
  *   name: Products
@@ -84,7 +150,11 @@ router.get("/", async (req, res) => {
     });
 
     console.log(`✅ Retornando ${products.length} productos (Filtros: cat=${categoryId}, brand=${brandId}, search='${search}')`);
-    res.json(products);
+
+    // Agregar precios calculados (transferencia y cuotas) usando configuración de DB
+    const productsWithPrices = await addCalculatedPrices(products);
+
+    res.json(productsWithPrices);
 });
 
 /**
@@ -151,7 +221,11 @@ router.get("/:id", async (req, res) => {
     console.log(`   Imágenes: ${product.images?.length || 0}`);
     console.log(`   Variantes: ${product.variants?.length || 0}`);
     console.log(`   Atributos asignados: ${product.attributes?.length || 0}`);
-    res.json(product);
+
+    // Agregar precios calculados (transferencia y cuotas) usando configuración de DB
+    const productWithPrices = await addCalculatedPrices(product);
+
+    res.json(productWithPrices);
 });
 
 /**
@@ -223,6 +297,18 @@ router.post("/", authMiddleware, adminOnly, async (req, res) => {
             .status(400)
             .json({ error: "Todas las variantes deben tener un precio de venta válido" });
     }
+
+    // Validar que precio promocional sea menor que precio de lista
+    const invalidPromoVariants = variants.filter(v =>
+        v.promotionPrice && v.promotionPrice >= v.salePrice
+    );
+    if (invalidPromoVariants.length > 0) {
+        console.log('❌ Validación fallida: precio promocional >= precio de lista');
+        return res
+            .status(400)
+            .json({ error: "El precio promocional debe ser menor al precio de lista" });
+    }
+
     console.log(`✅ Validaciones pasadas. Creando producto con ${variants.length} variantes...`);
 
     // Debug: ver imágenes recibidas
@@ -907,6 +993,14 @@ router.post("/:productId/variants", authMiddleware, adminOnly, async (req, res) 
             return res.status(400).json({ error: 'SKU y precio de venta son requeridos' });
         }
 
+        // Validar que precio promocional sea menor que precio de lista
+        if (promotionPrice && promotionPrice >= salePrice) {
+            console.log('❌ Validación fallida: precio promocional >= precio de lista');
+            return res.status(400).json({
+                error: "El precio promocional debe ser menor al precio de lista"
+            });
+        }
+
         // Crear la variante
         const variant = await prisma.productVariant.create({
             data: {
@@ -961,6 +1055,14 @@ router.put("/:productId/variants/:variantId", authMiddleware, adminOnly, async (
         console.log(`\\n🔧 PUT /products/${productId}/variants/${variantId} - Actualizar variante`);
         const { salePrice, promotionPrice, cost, stock, isActive, images } = req.body;
         console.log('Datos a actualizar:', { salePrice, promotionPrice, cost, stock, isActive, imagesCount: images?.length });
+
+        // Validar que precio promocional sea menor que precio de lista
+        if (promotionPrice && salePrice && promotionPrice >= salePrice) {
+            console.log('❌ Validación fallida: precio promocional >= precio de lista');
+            return res.status(400).json({
+                error: "El precio promocional debe ser menor al precio de lista"
+            });
+        }
 
         // Actualizar datos de la variante
         const variantUpdateData = {};

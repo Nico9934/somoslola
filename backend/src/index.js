@@ -12,6 +12,8 @@ import attributesRoutes from "./routes/attributes.js";
 import uploadRoutes from "./routes/upload.js";
 import shippingZonesRoutes from "./routes/shipping-zones.js";
 import heroBannersRoutes from "./routes/hero-banners.js";
+import paymentSettingsRoutes from "./routes/paymentSettings.js";
+import paymentsRoutes from "./routes/payments.js";
 
 import { swaggerUi, swaggerSpec } from "./swagger.js";
 import cartRoutes from "./routes/cart.js";
@@ -35,6 +37,8 @@ app.use("/dashboard", dashboardRoutes);
 app.use("/upload", uploadRoutes);
 app.use("/shipping-zones", shippingZonesRoutes);
 app.use("/hero-banners", heroBannersRoutes);
+app.use("/payment-settings", paymentSettingsRoutes);
+app.use("/payments", paymentsRoutes);
 
 // Swagger Docs
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
