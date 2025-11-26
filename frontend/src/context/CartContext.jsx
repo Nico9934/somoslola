@@ -1,18 +1,42 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { cartService } from '../api/cart';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext(null);
 
 export const CartProvider = ({ children }) => {
     const [cart, setCart] = useState(null);
     const [loading, setLoading] = useState(false);
+    const { user } = useAuth();
 
+    // Cargar carrito inicial desde localStorage
     useEffect(() => {
         const cartId = localStorage.getItem('cartId');
         if (cartId) {
             loadCart(cartId);
         }
     }, []);
+
+    // Recargar carrito cuando el usuario se autentica
+    useEffect(() => {
+        if (user) {
+            // Usuario autenticado - buscar su carrito
+            loadUserCart();
+        }
+    }, [user]);
+
+    const loadUserCart = async () => {
+        try {
+            setLoading(true);
+            const data = await cartService.createOrGet();
+            localStorage.setItem('cartId', data.id);
+            setCart(data);
+        } catch (error) {
+            console.error('Error loading user cart:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const loadCart = async (cartId) => {
         try {

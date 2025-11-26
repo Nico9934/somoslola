@@ -15,7 +15,8 @@ import {
     Menu,
     Truck,
     Tag,
-    Image
+    Image,
+    CreditCard
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
@@ -28,6 +29,7 @@ const navigation = [
     { label: 'Pedidos', href: '/admin/orders', icon: ShoppingCart },
     { label: 'Zonas de Envío', href: '/admin/shipping-zones', icon: Truck },
     { label: 'Hero Banners', href: '/admin/hero-banners', icon: Image },
+    { label: 'Config. Pagos', href: '/admin/payment-settings', icon: CreditCard },
 ];
 
 export default function AdminSidebar({ variant = 'desktop' }) {

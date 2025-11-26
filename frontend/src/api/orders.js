@@ -14,6 +14,11 @@ export const ordersService = {
         return data;
     },
 
+    async getMyOrders() {
+        const { data } = await api.get('/orders/my-orders');
+        return data;
+    },
+
     async getOrderById(id) {
         const { data } = await api.get(`/orders/${id}`);
         return data;
@@ -21,6 +26,11 @@ export const ordersService = {
 
     async updateStatus(id, status) {
         const { data } = await api.put(`/orders/${id}/status`, { status });
+        return data;
+    },
+
+    async uploadPaymentProof(orderId, paymentProof) {
+        const { data } = await api.post(`/orders/${orderId}/payment-proof`, { paymentProof });
         return data;
     },
 };

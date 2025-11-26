@@ -26,6 +26,8 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', token);
         const userData = await authService.getMe();
         setUser(userData);
+        // Limpiar cartId guest después de que setUser dispare la recarga del carrito
+        setTimeout(() => localStorage.removeItem('cartId'), 100);
         return userData;
     };
 

@@ -36,17 +36,17 @@ export default function OrdersManagement() {
 
     const statusColors = {
         PENDING: 'bg-yellow-100 text-yellow-800',
-        CONFIRMED: 'bg-blue-100 text-blue-800',
+        PAID: 'bg-blue-100 text-blue-800',
         SHIPPED: 'bg-purple-100 text-purple-800',
-        DELIVERED: 'bg-green-100 text-green-800',
+        COMPLETED: 'bg-green-100 text-green-800',
         CANCELLED: 'bg-red-100 text-red-800',
     };
 
     const statuses = [
         { value: 'PENDING', label: 'Pendiente' },
-        { value: 'CONFIRMED', label: 'Confirmado' },
+        { value: 'PAID', label: 'Pagado' },
         { value: 'SHIPPED', label: 'Enviado' },
-        { value: 'DELIVERED', label: 'Entregado' },
+        { value: 'COMPLETED', label: 'Completado' },
         { value: 'CANCELLED', label: 'Cancelado' },
     ];
 
@@ -94,13 +94,56 @@ export default function OrdersManagement() {
                                 </div>
 
                                 <div className="border-t pt-4 mb-4">
+                                    <h4 className="font-semibold text-primary mb-2">Información de pago:</h4>
+                                    <p className="text-sm text-muted mb-2">
+                                        Método: {order.paymentMethod === 'TRANSFER' ? '🏦 Transferencia' : '💳 Tarjeta'}
+                                    </p>
+
+                                    {order.paymentMethod === 'TRANSFER' && order.paymentProof && (
+                                        <div className="mt-3">
+                                            <p className="text-sm font-medium text-primary mb-2">Comprobante de pago:</p>
+                                            <a
+                                                href={order.paymentProof}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-block"
+                                            >
+                                                <img
+                                                    src={order.paymentProof}
+                                                    alt="Comprobante"
+                                                    className="max-w-xs rounded border border-gray-300 hover:border-secondary transition-colors cursor-pointer"
+                                                />
+                                            </a>
+                                            <p className="text-xs text-muted mt-1">
+                                                Click en la imagen para ver en tamaño completo
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {order.paymentMethod === 'TRANSFER' && !order.paymentProof && (
+                                        <p className="text-sm text-yellow-600">
+                                            ⏳ Esperando comprobante del cliente
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="border-t pt-4 mb-4">
                                     <h4 className="font-semibold text-primary mb-2">Productos:</h4>
                                     <div className="space-y-2">
                                         {order.items?.map((item) => (
-                                            <div key={item.id} className="flex justify-between text-sm">
-                                                <span>
-                                                    {item.variant?.product?.name || 'Producto'} ({item.variant?.sku}) x{item.quantity}
-                                                </span>
+                                            <div key={item.id} className="flex justify-between items-center text-sm">
+                                                <div className="flex items-center gap-3">
+                                                    {item.imageUrl && (
+                                                        <img
+                                                            src={item.imageUrl}
+                                                            alt={item.productName}
+                                                            className="w-12 h-12 object-cover rounded"
+                                                        />
+                                                    )}
+                                                    <span>
+                                                        {item.productName} ({item.variantSku}) x{item.quantity}
+                                                    </span>
+                                                </div>
                                                 <span className="font-semibold">
                                                     ${(item.price * item.quantity).toLocaleString()}
                                                 </span>

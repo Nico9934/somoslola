@@ -475,6 +475,15 @@ export default function ProductFormUnified() {
             return;
         }
 
+        // Validar que precio promocional sea menor que precio de lista
+        const invalidPromoVariants = variants.filter(v =>
+            v.promotionPrice && parseFloat(v.promotionPrice) >= parseFloat(v.salePrice)
+        );
+        if (invalidPromoVariants.length > 0) {
+            alert('El precio promocional debe ser menor al precio de lista');
+            return;
+        }
+
         console.log('✅ Validaciones pasadas');
         console.log('  Producto:', formData.name);
         console.log('  Categoría ID:', formData.categoryId);
@@ -593,8 +602,44 @@ export default function ProductFormUnified() {
     if (loading) {
         return (
             <AdminLayout>
-                <div className="flex justify-center items-center h-64">
-                    <Spinner size="lg" />
+                <div className="max-w-7xl mx-auto p-6">
+                    {/* Header Skeleton */}
+                    <div className="mb-6 flex items-center justify-between">
+                        <div className="h-9 w-64 bg-gray-200 animate-pulse rounded"></div>
+                        <div className="h-10 w-24 bg-gray-200 animate-pulse rounded"></div>
+                    </div>
+
+                    {/* Form Skeleton */}
+                    <div className="space-y-6">
+                        {/* Card 1 */}
+                        <div className="bg-white p-6 rounded-lg shadow-md">
+                            <div className="h-6 w-48 bg-gray-200 animate-pulse rounded mb-4"></div>
+                            <div className="space-y-4">
+                                <div className="h-10 w-full bg-gray-100 animate-pulse rounded"></div>
+                                <div className="h-24 w-full bg-gray-100 animate-pulse rounded"></div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="h-10 bg-gray-100 animate-pulse rounded"></div>
+                                    <div className="h-10 bg-gray-100 animate-pulse rounded"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Card 2 */}
+                        <div className="bg-white p-6 rounded-lg shadow-md">
+                            <div className="h-6 w-48 bg-gray-200 animate-pulse rounded mb-4"></div>
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="h-32 bg-gray-100 animate-pulse rounded"></div>
+                                <div className="h-32 bg-gray-100 animate-pulse rounded"></div>
+                                <div className="h-32 bg-gray-100 animate-pulse rounded"></div>
+                            </div>
+                        </div>
+
+                        {/* Card 3 */}
+                        <div className="bg-white p-6 rounded-lg shadow-md">
+                            <div className="h-6 w-48 bg-gray-200 animate-pulse rounded mb-4"></div>
+                            <div className="h-64 bg-gray-100 animate-pulse rounded"></div>
+                        </div>
+                    </div>
                 </div>
             </AdminLayout>
         );
@@ -863,11 +908,19 @@ export default function ProductFormUnified() {
                                                             type="number"
                                                             step="0.01"
                                                             min="0"
-                                                            className="w-28 px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-secondary"
+                                                            className={`w-28 px-3 py-2 text-sm border rounded focus:outline-none focus:ring-2 ${variant.promotionPrice && parseFloat(variant.promotionPrice) >= parseFloat(variant.salePrice)
+                                                                    ? 'border-red-500 focus:ring-red-500 bg-red-50'
+                                                                    : 'border-gray-300 focus:ring-secondary'
+                                                                }`}
                                                             value={variant.promotionPrice}
                                                             onChange={(e) => updateVariant(index, 'promotionPrice', e.target.value)}
                                                             placeholder="Opcional"
                                                         />
+                                                        {variant.promotionPrice && parseFloat(variant.promotionPrice) >= parseFloat(variant.salePrice) && (
+                                                            <p className="text-xs text-red-600 mt-1">
+                                                                Debe ser menor al precio de lista
+                                                            </p>
+                                                        )}
                                                     </td>
                                                     <td className="px-4 py-3">
                                                         <input

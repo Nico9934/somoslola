@@ -32,6 +32,16 @@ export default function Navbar() {
                     </div>
 
                     <div className="flex items-center space-x-4">
+                        {/* Carrito - SIEMPRE visible */}
+                        <Link to="/cart" className="relative text-gray-700 hover:text-secondary transition">
+                            🛒
+                            {itemsCount > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-secondary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                    {itemsCount}
+                                </span>
+                            )}
+                        </Link>
+
                         {user ? (
                             <>
                                 <span className="text-sm text-gray-600">
@@ -60,14 +70,6 @@ export default function Navbar() {
                                         </Link>
                                         <Link to="/orders" className="text-gray-700 hover:text-secondary transition">
                                             Mis Pedidos
-                                        </Link>
-                                        <Link to="/cart" className="relative text-gray-700 hover:text-secondary transition">
-                                            Carrito
-                                            {itemsCount > 0 && (
-                                                <span className="absolute -top-2 -right-2 bg-secondary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                                                    {itemsCount}
-                                                </span>
-                                            )}
                                         </Link>
                                     </>
                                 )}

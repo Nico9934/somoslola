@@ -10,16 +10,19 @@ export default function Layout({ children }) {
                 <div className="bg-primary text-white overflow-hidden">
                     <div className="animate-scroll whitespace-nowrap py-2 flex items-center gap-8 text-sm">
                         <span className="inline-flex items-center gap-2">
-                            <FaTruck /> Envío gratis a partir de $50.000
+                            <FaTruck /> ENVIOS GRATIS a TODO el pais con tu compra superior a $149.900 a domicilio y sucursales de Correo Arg. 💗📦
+
+
+
                         </span>
                         <span className="inline-flex items-center gap-2">
-                            <FaCreditCard /> Hasta 6 cuotas SIN INTERÉS
+                            <FaCreditCard /> Hasta 3 CUOTAS SIN INTERES! 20% OFF ABONANDO POR TRANSFE!
                         </span>
                         <span className="inline-flex items-center gap-2">
                             <FaStore /> Pickup Store sin costo en locales
                         </span>
                         <span className="inline-flex items-center gap-2">
-                            <FaWhatsapp /> Atención por WhatsApp
+                            <FaWhatsapp /> Atención personalizada por WhatsApp
                         </span>
                         {/* Repetir para efecto continuo */}
                         <span className="inline-flex items-center gap-2">

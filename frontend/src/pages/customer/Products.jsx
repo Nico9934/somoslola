@@ -224,31 +224,34 @@ export default function Products() {
                                             {product.variants && product.variants.length > 0 && (() => {
                                                 const hasPromotion = product.variants.some(v => v.promotionPrice);
                                                 const minSalePrice = Math.min(...product.variants.map(v => v.salePrice));
+                                                const minTransferPrice = Math.min(...product.variants.map(v => v.transferPrice));
+                                                const minInstallmentPrice = Math.min(...product.variants.map(v => v.installmentPrice));
                                                 const minPromoPrice = hasPromotion ? Math.min(...product.variants.filter(v => v.promotionPrice).map(v => v.promotionPrice)) : null;
+                                                const paymentOptions = product.variants[0]?.paymentOptions;
 
                                                 return (
-                                                    <div className="mb-4">
+                                                    <div className="mb-4 space-y-1">
                                                         {hasPromotion ? (
                                                             <>
                                                                 <p className="text-sm text-gray-400 line-through">
-                                                                    ${minSalePrice.toLocaleString()}
+                                                                    ${minSalePrice.toLocaleString('es-AR')}
                                                                 </p>
                                                                 <p className="text-xl font-bold text-red-600">
-                                                                    ${minPromoPrice.toLocaleString()}
-                                                                </p>
-                                                                <p className="text-xs text-green-600 font-semibold">
-                                                                    6x ${(minPromoPrice / 6).toLocaleString(undefined, { maximumFractionDigits: 0 })} sin interés
+                                                                    ${minPromoPrice.toLocaleString('es-AR')}
                                                                 </p>
                                                             </>
                                                         ) : (
-                                                            <>
-                                                                <p className="text-xl font-bold text-gray-900">
-                                                                    ${minSalePrice.toLocaleString()}
-                                                                </p>
-                                                                <p className="text-xs text-green-600 font-semibold">
-                                                                    6x ${(minSalePrice / 6).toLocaleString(undefined, { maximumFractionDigits: 0 })} sin interés
-                                                                </p>
-                                                            </>
+                                                            <p className="text-xl font-bold text-gray-900">
+                                                                ${minSalePrice.toLocaleString('es-AR')}
+                                                            </p>
+                                                        )}
+                                                        <p className="text-xs text-green-600 font-semibold">
+                                                            💳 ${minTransferPrice.toLocaleString('es-AR')} transferencia
+                                                        </p>
+                                                        {paymentOptions?.installmentsActive && minInstallmentPrice && (
+                                                            <p className="text-xs text-blue-600">
+                                                                {paymentOptions.installments} cuotas de ${minInstallmentPrice.toLocaleString('es-AR')}
+                                                            </p>
                                                         )}
                                                     </div>
                                                 );

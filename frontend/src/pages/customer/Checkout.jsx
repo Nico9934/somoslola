@@ -7,6 +7,7 @@ import Layout from '../../components/ui/Layout';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
+import MercadoPagoForm from '../../components/customer/MercadoPagoForm';
 import { toast } from 'react-toastify';
 
 export default function Checkout() {
@@ -17,6 +18,7 @@ export default function Checkout() {
     const [currentStep, setCurrentStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [calculatingShipping, setCalculatingShipping] = useState(false);
+    const [processingPayment, setProcessingPayment] = useState(false);
 
     // Datos del formulario
     const [formData, setFormData] = useState({
@@ -25,13 +27,14 @@ export default function Checkout() {
         customerName: user?.name || '',
         customerPhone: '',
         shippingAddress: '',
+        shippingNeighborhood: '', // Barrio
         shippingCity: '',
         shippingState: '',
         shippingPostalCode: '',
         shippingCost: 0,
 
         // Paso 2: Método de pago
-        paymentMethod: 'CARD', // CARD o TRANSFER
+        paymentMethod: 'TRANSFER', // CARD o TRANSFER (por defecto transferencia)
     });
 
     useEffect(() => {
@@ -70,7 +73,7 @@ export default function Checkout() {
         const { email, customerName, customerPhone, shippingAddress, shippingCity, shippingState, shippingPostalCode, shippingCost } = formData;
 
         if (!email || !customerName || !customerPhone || !shippingAddress || !shippingCity || !shippingState || !shippingPostalCode) {
-            toast.error('Por favor completa todos los campos');
+            toast.error('Por favor completa todos los campos obligatorios');
             return false;
         }
 
@@ -94,6 +97,13 @@ export default function Checkout() {
     };
 
     const handleSubmit = async () => {
+        // Si es pago con tarjeta, no hacer nada aquí
+        // El pago se procesa desde handlePaymentSubmit
+        if (formData.paymentMethod === 'CARD') {
+            return;
+        }
+
+        // Solo para transferencia bancaria
         setLoading(true);
         try {
             const cartId = localStorage.getItem('cartId');
@@ -104,6 +114,7 @@ export default function Checkout() {
                 customerName: formData.customerName,
                 customerPhone: formData.customerPhone,
                 shippingAddress: formData.shippingAddress,
+                shippingNeighborhood: formData.shippingNeighborhood,
                 shippingCity: formData.shippingCity,
                 shippingState: formData.shippingState,
                 shippingPostalCode: formData.shippingPostalCode,
@@ -134,13 +145,84 @@ export default function Checkout() {
         }
     };
 
+    const handlePaymentSubmit = async (paymentData) => {
+        setProcessingPayment(true);
+
+        try {
+            const cartId = localStorage.getItem('cartId');
+
+            // 1. Crear la orden primero
+            const orderData = {
+                cartId,
+                email: formData.email,
+                customerName: formData.customerName,
+                customerPhone: formData.customerPhone,
+                shippingAddress: formData.shippingAddress,
+                shippingNeighborhood: formData.shippingNeighborhood,
+                shippingCity: formData.shippingCity,
+                shippingState: formData.shippingState,
+                shippingPostalCode: formData.shippingPostalCode,
+                shippingCost: formData.shippingCost,
+                paymentMethod: 'CARD',
+            };
+
+            const { data: orderResponse } = await ordersService.createOrder(orderData);
+            const order = orderResponse.order;
+
+            // 2. Procesar el pago con Mercado Pago
+            const paymentResponse = await fetch('http://localhost:4000/payments/process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    orderId: order.id,
+                    token: paymentData.token,
+                    paymentMethodId: paymentData.payment_method_id,
+                    installments: paymentData.installments,
+                }),
+            });
+
+            const result = await paymentResponse.json();
+
+            if (result.success) {
+                toast.success('¡Pago procesado con éxito! 🎉');
+
+                // Limpiar carrito
+                clearCart();
+                localStorage.removeItem('cartId');
+
+                // Navegar a confirmación
+                navigate(`/order-confirmation/${order.id}`, {
+                    state: { order }
+                });
+            } else {
+                toast.error(`Pago rechazado: ${result.statusDetail || 'Error desconocido'}`);
+            }
+        } catch (error) {
+            console.error('❌ Error al procesar el pago:', error);
+            toast.error('Error al procesar el pago');
+        } finally {
+            setProcessingPayment(false);
+        }
+    };
+
+    const handlePaymentError = (error) => {
+        console.error('Error en formulario de pago:', error);
+        toast.error('Error al cargar el formulario de pago');
+    };
+
     const calculateSubtotal = () => {
         if (!cart?.items) return 0;
-        return cart.items.reduce((sum, item) => sum + (item.variant.product.basePrice * item.quantity), 0);
+        const subtotal = cart.items.reduce((sum, item) => {
+            const price = item.variant?.promotionPrice || item.variant?.salePrice || 0;
+            return sum + (price * item.quantity);
+        }, 0);
+        return subtotal;
     };
 
     const calculateTotal = () => {
-        return calculateSubtotal() + formData.shippingCost;
+        const subtotal = calculateSubtotal();
+        const shipping = parseFloat(formData.shippingCost) || 0;
+        return subtotal + shipping;
     };
 
     if (!cart || cart.items?.length === 0) {
@@ -223,7 +305,33 @@ export default function Checkout() {
                                         />
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1">Barrio (opcional)</label>
+                                            <input
+                                                type="text"
+                                                name="shippingNeighborhood"
+                                                value={formData.shippingNeighborhood}
+                                                onChange={handleChange}
+                                                placeholder="Ej: Palermo, Recoleta"
+                                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1">Código Postal *</label>
+                                            <input
+                                                type="text"
+                                                name="shippingPostalCode"
+                                                value={formData.shippingPostalCode}
+                                                onChange={handleChange}
+                                                placeholder="1234"
+                                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium mb-1">Ciudad *</label>
                                             <input
@@ -246,8 +354,11 @@ export default function Checkout() {
                                                 required
                                             />
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-medium mb-1">Código Postal *</label>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Código Postal (para calcular envío) *</label>
+                                        <div className="flex gap-2">
                                             <div className="flex gap-2">
                                                 <input
                                                     type="text"
@@ -292,7 +403,28 @@ export default function Checkout() {
                                     <h2 className="text-xl font-semibold mb-4">Método de Pago</h2>
 
                                     <div className="space-y-3">
-                                        <label className="flex items-start p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                                        <label className={`flex items-start p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${formData.paymentMethod === 'TRANSFER' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                                            }`}>
+                                            <input
+                                                type="radio"
+                                                name="paymentMethod"
+                                                value="TRANSFER"
+                                                checked={formData.paymentMethod === 'TRANSFER'}
+                                                onChange={handleChange}
+                                                className="mt-1 mr-3"
+                                            />
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="font-medium">🏦 Transferencia o depósito bancario</span>
+                                                </div>
+                                                <p className="text-sm text-gray-600 mt-1">
+                                                    Recibirás los datos bancarios al confirmar tu pedido
+                                                </p>
+                                            </div>
+                                        </label>
+
+                                        <label className={`flex items-start p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${formData.paymentMethod === 'CARD' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                                            }`}>
                                             <input
                                                 type="radio"
                                                 name="paymentMethod"
@@ -310,33 +442,37 @@ export default function Checkout() {
                                                 </p>
                                             </div>
                                         </label>
-
-                                        <label className="flex items-start p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                                            <input
-                                                type="radio"
-                                                name="paymentMethod"
-                                                value="TRANSFER"
-                                                checked={formData.paymentMethod === 'TRANSFER'}
-                                                onChange={handleChange}
-                                                className="mt-1 mr-3"
-                                            />
-                                            <div className="flex-1">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="font-medium">🏦 Transferencia Bancaria</span>
-                                                </div>
-                                                <p className="text-sm text-gray-600 mt-1">
-                                                    Recibirás los datos bancarios por email
-                                                </p>
-                                            </div>
-                                        </label>
                                     </div>
 
                                     {formData.paymentMethod === 'TRANSFER' && (
                                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                            <p className="text-sm text-blue-800">
-                                                ℹ️ Una vez confirmado el pedido, te enviaremos los datos para realizar la transferencia.
-                                                El pedido se procesará al recibir el comprobante.
+                                            <p className="text-sm text-blue-900 font-medium mb-2">
+                                                ℹ️ Importante sobre transferencias bancarias:
                                             </p>
+                                            <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                                                <li>Recibirás los datos bancarios por email al confirmar el pedido</li>
+                                                <li>El pedido se procesará al recibir el comprobante de pago</li>
+                                                <li>Recordá incluir el número de pedido en el comprobante</li>
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {formData.paymentMethod === 'CARD' && (
+                                        <div className="mt-6 border-2 border-gray-300 rounded-lg p-6">
+                                            <h3 className="text-sm font-bold uppercase tracking-wider mb-4">Datos de la tarjeta</h3>
+
+                                            <MercadoPagoForm
+                                                amount={calculateTotal()}
+                                                onSubmit={handlePaymentSubmit}
+                                                onError={handlePaymentError}
+                                            />
+
+                                            {processingPayment && (
+                                                <div className="mt-4 text-center">
+                                                    <Spinner />
+                                                    <p className="text-sm text-gray-600 mt-2">Procesando pago...</p>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
@@ -344,9 +480,11 @@ export default function Checkout() {
                                         <Button onClick={handlePreviousStep} variant="outline">
                                             Volver
                                         </Button>
-                                        <Button onClick={handleNextStep}>
-                                            Continuar
-                                        </Button>
+                                        {formData.paymentMethod === 'TRANSFER' && (
+                                            <Button onClick={handleNextStep}>
+                                                Continuar
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -379,15 +517,18 @@ export default function Checkout() {
                                         <div className="bg-gray-50 rounded-lg p-4">
                                             <h3 className="font-medium mb-2">🛍️ Productos</h3>
                                             <div className="space-y-2">
-                                                {cart.items.map((item) => (
-                                                    <div key={item.id} className="flex justify-between text-sm">
-                                                        <span>
-                                                            {item.variant.product.name}
-                                                            <span className="text-gray-600"> (x{item.quantity})</span>
-                                                        </span>
-                                                        <span>${(item.variant.product.basePrice * item.quantity).toFixed(2)}</span>
-                                                    </div>
-                                                ))}
+                                                {cart.items.map((item) => {
+                                                    const price = item.variant?.promotionPrice || item.variant?.salePrice || 0;
+                                                    return (
+                                                        <div key={item.id} className="flex justify-between text-sm">
+                                                            <span>
+                                                                {item.variant.product.name}
+                                                                <span className="text-gray-600"> (x{item.quantity})</span>
+                                                            </span>
+                                                            <span>${(price * item.quantity).toLocaleString()}</span>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     </div>
@@ -421,7 +562,7 @@ export default function Checkout() {
 
                                 <div className="flex justify-between">
                                     <span>Envío</span>
-                                    <span>${formData.shippingCost.toFixed(2)}</span>
+                                    <span>${(parseFloat(formData.shippingCost) || 0).toFixed(2)}</span>
                                 </div>
 
                                 <div className="border-t pt-2 mt-2">

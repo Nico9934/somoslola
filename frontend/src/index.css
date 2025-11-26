@@ -11,6 +11,9 @@
 
     body {
         @apply bg-background text-primary;
+        font-family: 'Yantramanav', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 }
 

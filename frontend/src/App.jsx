@@ -27,6 +27,7 @@ import AttributesManagement from './pages/admin/AttributesManagement';
 import OrdersManagement from './pages/admin/OrdersManagement';
 import ShippingZonesManagement from './pages/admin/ShippingZonesManagement';
 import HeroBannersManagement from './pages/admin/HeroBannersManagement';
+import PaymentSettingsManagement from './pages/admin/PaymentSettingsManagement';
 
 export default function App() {
   return (
@@ -39,16 +40,9 @@ export default function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/products" element={<Products />} />
             <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="/cart" element={<Cart />} />
 
-            {/* Customer routes */}
-            <Route
-              path="/cart"
-              element={
-                <ProtectedRoute>
-                  <Cart />
-                </ProtectedRoute>
-              }
-            />
+            {/* Customer routes (requieren login) */}
             <Route
               path="/checkout"
               element={
@@ -152,6 +146,14 @@ export default function App() {
               element={
                 <ProtectedRoute adminOnly>
                   <HeroBannersManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/payment-settings"
+              element={
+                <ProtectedRoute adminOnly>
+                  <PaymentSettingsManagement />
                 </ProtectedRoute>
               }
             />

@@ -6,6 +6,9 @@ module.exports = {
     ],
     theme: {
         extend: {
+            fontFamily: {
+                sans: ['Yantramanav', 'sans-serif'],
+            },
             colors: {
                 primary: {
                     DEFAULT: "#111827", // gray-900

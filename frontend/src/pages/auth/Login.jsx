@@ -73,9 +73,12 @@ export default function Login() {
                 </form>
 
                 {/* 🔧 DEV: Botones de login rápido */}
-                <div className="mt-4 space-y-2">
-                    <p className="text-sm font-semibold text-gray-600">🔧 Desarrollo - Login Rápido:</p>
-                    <div className="flex gap-2">
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-sm font-semibold text-gray-700 mb-3">🔧 Testing - Login Rápido:</p>
+
+                    {/* Admin */}
+                    <div className="mb-3">
+                        <p className="text-xs text-gray-500 mb-1">Admin:</p>
                         <Button
                             type="button"
                             variant="outline"
@@ -84,23 +87,66 @@ export default function Login() {
                                 setEmail('admin@somoslola.com');
                                 setPassword('admin123');
                             }}
-                            className="flex-1"
+                            className="w-full"
                         >
                             👤 Admin
                         </Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                                setEmail('prueba1@gmail.com');
-                                setPassword('prueba1');
-                            }}
-                            className="flex-1"
-                        >
-                            👥 Customer
-                        </Button>
                     </div>
+
+                    {/* Clientes de prueba */}
+                    <div>
+                        <p className="text-xs text-gray-500 mb-1">Clientes de prueba:</p>
+                        <div className="grid grid-cols-2 gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setEmail('prueba1@gmail.com');
+                                    setPassword('prueba1');
+                                }}
+                            >
+                                👥 Prueba 1
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setEmail('prueba2@gmail.com');
+                                    setPassword('prueba2');
+                                }}
+                            >
+                                👥 Prueba 2
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setEmail('prueba3@gmail.com');
+                                    setPassword('prueba3');
+                                }}
+                            >
+                                👥 Prueba 3
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setEmail('prueba4@gmail.com');
+                                    setPassword('prueba4');
+                                }}
+                            >
+                                👥 Prueba 4
+                            </Button>
+                        </div>
+                    </div>
+
+                    <p className="text-xs text-gray-400 mt-2 italic">
+                        Click en un botón y luego "Ingresar" (o Enter)
+                    </p>
                 </div>
 
                 <p className="mt-6 text-center text-sm text-muted">

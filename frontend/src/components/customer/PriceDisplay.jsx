@@ -1,0 +1,79 @@
+/**
+ * Componente para mostrar precios con diferentes opciones de pago
+ * - Precio de lista (salePrice)
+ * - Precio transferencia (calculado por backend)
+ * - Cuotas sin interés (calculado por backend)
+ * 
+ * IMPORTANTE: Todos los cálculos vienen del backend para garantizar
+ * consistencia en el checkout y evitar manipulación de precios.
+ */
+export default function PriceDisplay({
+    salePrice,
+    transferPrice,
+    installmentPrice,
+    promotionPrice,
+    paymentOptions = { installments: 3, transferDiscount: 20 },
+    showInstallments = true
+}) {
+    // Si hay precio promocional, usarlo como base
+    const basePrice = promotionPrice || salePrice;
+    const hasPromotion = !!promotionPrice;
+
+    return (
+        <div className="space-y-3">
+            {/* Precio de Lista */}
+            {hasPromotion && (
+                <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500 line-through">
+                        ${salePrice.toLocaleString('es-AR')}
+                    </span>
+                    <span className="text-xs font-semibold bg-red-100 text-red-600 px-2 py-1 rounded">
+                        -{Math.round(((salePrice - promotionPrice) / salePrice) * 100)}% OFF
+                    </span>
+                </div>
+            )}
+
+            {/* Precio Principal (Lista o Promoción) */}
+            <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold text-gray-900">
+                    ${basePrice.toLocaleString('es-AR')}
+                </span>
+                {!hasPromotion && (
+                    <span className="text-sm text-gray-500">Precio de lista</span>
+                )}
+            </div>
+
+            {/* Precio Transferencia (20% off) */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-sm text-green-700 font-medium">
+                            💳 Precio transferencia ({paymentOptions.transferDiscount}% OFF)
+                        </p>
+                        <p className="text-2xl font-bold text-green-600">
+                            ${transferPrice.toLocaleString('es-AR')}
+                        </p>
+                    </div>
+                    <div className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                        Ahorrás ${(basePrice - transferPrice).toLocaleString('es-AR')}
+                    </div>
+                </div>
+            </div>
+
+            {/* Cuotas sin interés */}
+            {showInstallments && paymentOptions.installmentsActive && installmentPrice && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-sm text-blue-700 font-medium mb-1">
+                        💰 {paymentOptions.installments} cuotas sin interés
+                    </p>
+                    <p className="text-xl font-bold text-blue-600">
+                        {paymentOptions.installments} x ${installmentPrice.toLocaleString('es-AR')}
+                    </p>
+                    <p className="text-xs text-blue-600 mt-1">
+                        Total: ${(installmentPrice * paymentOptions.installments).toLocaleString('es-AR')}
+                    </p>
+                </div>
+            )}
+        </div>
+    );
+}
