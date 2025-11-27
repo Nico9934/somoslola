@@ -133,7 +133,7 @@ export default function ProductDetail() {
 
     return (
         <Layout>
-            <div className={layout.container}>
+            <div className={layout.containerXWide}>
                 <Button variant="ghost" onClick={() => navigate('/products')} className="mb-4">
                     ← Volver
                 </Button>

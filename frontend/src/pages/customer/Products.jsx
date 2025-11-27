@@ -13,7 +13,7 @@ import ProductFilters from '../../components/customer/ProductFilters';
 import { toast } from 'react-toastify';
 import { FaShoppingCart, FaHeart, FaEye } from 'react-icons/fa';
 import { Search } from 'lucide-react';
-import { text, badges, layout, buttons, products as productStyles, inputs } from '../../styles';
+import { text, layout, products as productStyles, inputs } from '../../styles';
 
 export default function Products() {
     const [products, setProducts] = useState([]);
@@ -170,142 +170,101 @@ export default function Products() {
                             <p className={`${text.muted} text-center`}>No hay productos disponibles</p>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                {filteredProducts.map((product) => (
-                                    <div key={product.id} className="group relative bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
-                                        {/* Badge de promoción */}
-                                        {product.variants?.some(v => v.promotionPrice) && (
-                                            <div className={`absolute top-3 left-3 z-10 ${badges.error}`}>
-                                                OFERTA
-                                            </div>
-                                        )}
+                                {filteredProducts.map((product) => {
+                                    const variantWithImage = product.variants?.find(v => v.images?.length > 0);
+                                    const imageUrl = variantWithImage?.images[0]?.url;
 
-                                        {/* Botón de favoritos */}
-                                        <button className="absolute top-3 right-3 bg-white rounded-full p-2 shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-50">
-                                            <FaHeart className="text-gray-400 hover:text-red-500" />
-                                        </button>
+                                    const hasPromo = product.variants.some(v => v.promotionPrice);
+                                    const minPrice = Math.min(...product.variants.map(v => v.salePrice));
+                                    const promoPrice = hasPromo
+                                        ? Math.min(...product.variants.filter(v => v.promotionPrice).map(v => v.promotionPrice))
+                                        : null;
 
-                                        {/* Imagen del producto - primera variante con imagen */}
-                                        <Link to={`/products/${product.id}`} className="block relative overflow-hidden bg-gray-50 aspect-square">
-                                            {(() => {
-                                                // Buscar primera variante con imagen
-                                                const variantWithImage = product.variants?.find(v => v.images && v.images.length > 0);
-                                                const imageUrl = variantWithImage?.images[0]?.url;
+                                    return (
+                                        <div key={product.id} className={productStyles.productCard}>
 
-                                                return imageUrl ? (
-                                                    <img
-                                                        src={imageUrl}
-                                                        alt={product.name}
-                                                        className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
-                                                    />
+                                            {/* Imagen */}
+                                            <Link to={`/products/${product.id}`} className={productStyles.productCardImageWrap}>
+
+                                                {imageUrl ? (
+                                                    <img src={imageUrl} alt={product.name} className={productStyles.productCardImage} />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center">
-                                                        <p className={text.muted}>Sin imagen</p>
-                                                    </div>
-                                                );
-                                            })()}
+                                                    <div className="flex items-center justify-center text-gray-400">Sin imagen</div>
+                                                )}
 
-                                            {/* Overlay con botón de vista rápida */}
-                                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                                                {/* <Button
-                                        variant="outline"
-                                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-white"
-                                    >
-                                        <FaEye className="mr-2" /> Vista rápida
-                                    </Button> */}
-                                            </div>
-                                        </Link>
+                                                {/* Badge promo */}
+                                                {hasPromo && (
+                                                    <span className={productStyles.productCardBadge}>OFERTA</span>
+                                                )}
 
-                                        {/* Contenido */}
-                                        <div className="p-4">
-                                            {/* Categoría */}
-                                            <p className={productStyles.meta}>
-                                                {product.category?.name}
-                                            </p>
-
-                                            {/* Nombre */}
-                                            <Link to={`/products/${product.id}`}>
-                                                <h3 className={`${productStyles.name} hover:text-black transition-colors line-clamp-2 min-h-[3rem]`}>
-                                                    {product.name}
-                                                </h3>
+                                                {/* Favoritos */}
+                                                <button className={productStyles.productCardFavBtn}>
+                                                    <FaHeart className="text-gray-400 hover:text-red-500" />
+                                                </button>
                                             </Link>
 
-                                            {/* Colores disponibles */}
-                                            {product.variants && product.variants.length > 0 && (
-                                                <div className="flex items-center gap-1.5 mb-3">
-                                                    {product.variants.slice(0, 5).map((variant) => {
-                                                        const colorAttr = variant.attributeValues?.find(
-                                                            av => av.attributeValue.hexColor
-                                                        );
-                                                        if (colorAttr) {
-                                                            return (
-                                                                <div
-                                                                    key={variant.id}
-                                                                    className="w-5 h-5 rounded-full border-2 border-gray-200 shadow-sm hover:scale-110 transition-transform cursor-pointer"
-                                                                    style={{ backgroundColor: colorAttr.attributeValue.hexColor }}
-                                                                    title={colorAttr.attributeValue.value}
-                                                                />
-                                                            );
-                                                        }
-                                                        return null;
-                                                    })}
-                                                    {product.variants.length > 5 && (
-                                                        <span className="text-xs text-gray-500 ml-1">
-                                                            +{product.variants.length - 5}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            )}
+                                            {/* Cuerpo */}
+                                            <div className={productStyles.productCardBody}>
+                                                <div className="space-y-2">
+                                                    <p className={productStyles.productCardCategory}>{product.category?.name}</p>
 
-                                            {/* Precio */}
-                                            {product.variants && product.variants.length > 0 && (() => {
-                                                const hasPromotion = product.variants.some(v => v.promotionPrice);
-                                                const minSalePrice = Math.min(...product.variants.map(v => v.salePrice));
-                                                const minTransferPrice = Math.min(...product.variants.map(v => v.transferPrice));
-                                                const minInstallmentPrice = Math.min(...product.variants.map(v => v.installmentPrice));
-                                                const minPromoPrice = hasPromotion ? Math.min(...product.variants.filter(v => v.promotionPrice).map(v => v.promotionPrice)) : null;
-                                                const paymentOptions = product.variants[0]?.paymentOptions;
+                                                    <Link to={`/products/${product.id}`}>
+                                                        <h3 className={productStyles.productCardName}>{product.name}</h3>
+                                                    </Link>
 
-                                                return (
-                                                    <div className="mb-4 space-y-1">
-                                                        {hasPromotion ? (
-                                                            <>
-                                                                <p className={`${productStyles.meta} line-through`}>
-                                                                    ${minSalePrice.toLocaleString('es-AR')}
-                                                                </p>
-                                                                <p className={productStyles.pricePromo}>
-                                                                    ${minPromoPrice.toLocaleString('es-AR')}
-                                                                </p>
-                                                            </>
-                                                        ) : (
-                                                            <p className={productStyles.price}>
-                                                                ${minSalePrice.toLocaleString('es-AR')}
-                                                            </p>
-                                                        )}
-                                                        <p className="text-xs text-green-600 font-semibold">
-                                                            💳 ${minTransferPrice.toLocaleString('es-AR')} transferencia
-                                                        </p>
-                                                        {paymentOptions?.installmentsActive && minInstallmentPrice && (
-                                                            <p className="text-xs text-blue-600">
-                                                                {paymentOptions.installments} cuotas de ${minInstallmentPrice.toLocaleString('es-AR')}
-                                                            </p>
+                                                    {/* Precio y colores en línea */}
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        {/* Precios */}
+                                                        <div>
+                                                            {hasPromo ? (
+                                                                <>
+                                                                    <p className={productStyles.productCardPrice}>${promoPrice.toLocaleString("es-AR")}</p>
+                                                                    <p className={productStyles.productCardPriceOld}>${minPrice.toLocaleString("es-AR")}</p>
+                                                                </>
+                                                            ) : (
+                                                                <p className={productStyles.productCardPrice}>${minPrice.toLocaleString("es-AR")}</p>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Colores */}
+                                                        {product.variants.length > 1 && (
+                                                            <div className={productStyles.productCardColors}>
+                                                                {product.variants.slice(0, 4).map(variant => {
+                                                                    const color = variant.attributeValues?.find(av => av.attributeValue.hexColor)?.attributeValue.hexColor;
+                                                                    if (!color) return null;
+                                                                    return <div key={variant.id} className={productStyles.productCardColorDot} style={{ backgroundColor: color }} />;
+                                                                })}
+                                                                {product.variants.length > 4 && (
+                                                                    <span className="text-xs text-gray-400">+{product.variants.length - 4}</span>
+                                                                )}
+                                                            </div>
                                                         )}
                                                     </div>
-                                                );
-                                            })()}
+                                                </div>
 
-                                            {/* Botón de agregar */}
-                                            {product.variants && product.variants.length > 0 && (
-                                                <button
-                                                    onClick={() => handleAddToCart(product.variants[0].id)}
-                                                    className={`${buttons.primary} ${buttons.full} flex items-center justify-center gap-2 group`}
-                                                >
-                                                    <FaShoppingCart className="text-sm" />
-                                                    <span className="text-sm">Agregar</span>
-                                                </button>
-                                            )}
+                                                {/* Footer con info de pagos */}
+                                                <div className={productStyles.productCardFooter}>
+                                                    <p className={productStyles.productCardTransferPrice}>
+                                                        ${(hasPromo ? promoPrice * 0.9 : minPrice * 0.9).toLocaleString("es-AR")} Transferencia
+                                                    </p>
+                                                    <p className={productStyles.productCardInstallments}>
+                                                        3 cuotas sin interés de ${((hasPromo ? promoPrice : minPrice) / 3).toLocaleString("es-AR")}
+                                                    </p>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            handleAddToCart(product.variants[0].id);
+                                                        }}
+                                                        className="w-full mt-3 bg-black text-white text-sm px-4 py-2.5 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                                                    >
+                                                        <FaShoppingCart />
+                                                        Agregar al carrito
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

@@ -19,7 +19,7 @@ import {
     CreditCard
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
-import { text } from '../../styles';
+import { text, buttons, badges } from '../../styles';
 
 const navigation = [
     { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -112,12 +112,12 @@ export default function AdminSidebar({ variant = 'desktop' }) {
                             'w-10 h-10 bg-secondary rounded-lg flex items-center justify-center flex-shrink-0',
                             !isExpanded && 'mx-auto'
                         )}>
-                            <span className="text-white font-bold text-lg">SL</span>
+                            <span className="text-white font-bold text-xl">SL</span>
                         </div>
                         {isExpanded && (
                             <div>
-                                <h1 className={`text-lg ${text.label} text-white`}>SOMOSLOLA</h1>
-                                <p className={`${text.muted} text-gray-300`}>Panel Admin</p>
+                                <h1 className="text-lg font-bold text-white tracking-wide">SOMOSLOLA</h1>
+                                <p className={text.caption}>Panel Admin</p>
                             </div>
                         )}
                     </div>
@@ -150,11 +150,12 @@ export default function AdminSidebar({ variant = 'desktop' }) {
                                     key={item.label}
                                     to={item.href}
                                     className={cn(
-                                        'flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                                        'flex items-center rounded-lg px-3 py-3 transition-all',
+                                        text.body,
                                         !isExpanded && 'justify-center',
                                         isActive
-                                            ? 'bg-secondary text-white'
-                                            : 'text-gray-300 hover:bg-primary-light hover:text-white'
+                                            ? 'bg-secondary text-white font-semibold shadow-md'
+                                            : 'text-gray-300 hover:bg-primary-light hover:text-white font-medium'
                                     )}
                                     onClick={() => {
                                         if (isMobile) setIsOpen(false);
@@ -172,14 +173,14 @@ export default function AdminSidebar({ variant = 'desktop' }) {
                 <div className="border-t border-primary-light p-3 space-y-2">
                     {/* User info */}
                     <div className={cn(
-                        'flex items-center gap-3 px-3 py-2 rounded-lg bg-primary-light',
+                        'flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary-light',
                         !isExpanded && 'justify-center'
                     )}>
-                        <User className="h-4 w-4 text-gray-300 flex-shrink-0" />
+                        <User className="h-5 w-5 text-gray-300 flex-shrink-0" />
                         {isExpanded && (
                             <div className="flex-1 min-w-0">
-                                <p className={`${text.label} text-white truncate`}>{user?.email}</p>
-                                <p className={`${text.muted} text-gray-400`}>Administrador</p>
+                                <p className="text-sm font-semibold text-white truncate">{user?.email}</p>
+                                <p className={text.caption}>Administrador</p>
                             </div>
                         )}
                     </div>
@@ -189,17 +190,18 @@ export default function AdminSidebar({ variant = 'desktop' }) {
                         variant="ghost"
                         onClick={handleLogout}
                         className={cn(
-                            'w-full text-gray-300 flex items-center justify-center hover:text-red-400 hover:bg-red-400/10',
+                            'w-full text-gray-300 flex items-center justify-center hover:text-red-400 hover:bg-red-400/10 transition-colors',
+                            text.body,
                             !isExpanded ? 'justify-center px-0' : 'justify-start gap-3'
                         )}
                     >
-                        <LogOut className="h-4 w-4 flex-shrink-0" />
+                        <LogOut className="h-5 w-5 flex-shrink-0" />
                         {isExpanded && <span>Cerrar Sesión</span>}
                     </Button>
 
                     {/* Version */}
                     {isExpanded && (
-                        <p className={`${text.muted} text-gray-400 text-center pt-2`}>
+                        <p className={`${text.caption} text-center pt-2`}>
                             v1.0.0
                         </p>
                     )}
