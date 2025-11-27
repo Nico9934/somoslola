@@ -203,7 +203,56 @@ async function main() {
         },
     });
 
-    console.log("✔ Admin creado\n");
+    console.log("✔ Admin creado");
+
+    // ============ USUARIOS DE PRUEBA ============
+    console.log("👥 Creando usuarios de prueba...");
+
+    // Prueba 1
+    await prisma.user.upsert({
+        where: { email: "prueba1@test.com" },
+        update: {},
+        create: {
+            email: "prueba1@test.com",
+            password: await bcrypt.hash("prueba1", 10),
+            role: "USER",
+        },
+    });
+
+    // Prueba 2
+    await prisma.user.upsert({
+        where: { email: "prueba2@test.com" },
+        update: {},
+        create: {
+            email: "prueba2@test.com",
+            password: await bcrypt.hash("prueba2", 10),
+            role: "USER",
+        },
+    });
+
+    // Prueba 3
+    await prisma.user.upsert({
+        where: { email: "prueba3@test.com" },
+        update: {},
+        create: {
+            email: "prueba3@test.com",
+            password: await bcrypt.hash("prueba3", 10),
+            role: "USER",
+        },
+    });
+
+    // Prueba 4
+    await prisma.user.upsert({
+        where: { email: "prueba4@test.com" },
+        update: {},
+        create: {
+            email: "prueba4@test.com",
+            password: await bcrypt.hash("prueba4", 10),
+            role: "USER",
+        },
+    });
+
+    console.log("✔ Usuarios de prueba creados\n");
 
     // ============ CATEGORÍAS ============
     console.log("📁 Creando categorías...");
