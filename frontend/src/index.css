@@ -1,9 +1,9 @@
+/* Importar tema minimalista */
+@import './styles/minimal-theme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Importar tema minimalista */
-@import './styles/minimal-theme.css';
 
 @layer base {
     :root {
