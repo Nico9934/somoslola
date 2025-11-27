@@ -2,7 +2,7 @@ import AdminSidebar from './AdminSidebar';
 
 export default function AdminLayout({ children }) {
     return (
-        <div className="flex min-h-screen bg-background-dark">
+        <div className="flex min-h-screen bg-gray-50">
             {/* Desktop sidebar */}
             <div className="hidden md:block">
                 <AdminSidebar variant="desktop" />

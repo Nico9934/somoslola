@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
+import { text, buttons, alerts, cards } from '../../styles';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -33,12 +34,12 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background-dark">
-            <Card className="w-full max-w-md">
-                <h1 className="text-3xl font-bold text-primary mb-6 text-center">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <Card variant="bordered" className="w-full max-w-md">
+                <h1 className={`${text.pageTitle} text-center`}>
                     SOMOSLOLA
                 </h1>
-                <h2 className="text-xl text-muted mb-6 text-center">Iniciar Sesión</h2>
+                <h2 className={`${text.sectionTitle} text-center`}>Iniciar Sesión</h2>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <Input
@@ -60,12 +61,12 @@ export default function Login() {
                     />
 
                     {error && (
-                        <p className="text-red-500 text-sm">{error}</p>
+                        <p className={alerts.errorText}>{error}</p>
                     )}
 
                     <Button
                         type="submit"
-                        className="w-full"
+                        className={buttons.full}
                         disabled={loading}
                     >
                         {loading ? 'Ingresando...' : 'Ingresar'}
@@ -74,11 +75,11 @@ export default function Login() {
 
                 {/* 🔧 DEV: Botones de login rápido */}
                 <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                    <p className="text-sm font-semibold text-gray-700 mb-3">🔧 Testing - Login Rápido:</p>
+                    <p className={`${text.label} mb-3`}>🔧 Testing - Login Rápido:</p>
 
                     {/* Admin */}
                     <div className="mb-3">
-                        <p className="text-xs text-gray-500 mb-1">Admin:</p>
+                        <p className={`${text.muted} mb-1`}>Admin:</p>
                         <Button
                             type="button"
                             variant="outline"
@@ -95,7 +96,7 @@ export default function Login() {
 
                     {/* Clientes de prueba */}
                     <div>
-                        <p className="text-xs text-gray-500 mb-1">Clientes de prueba:</p>
+                        <p className={`${text.muted} mb-1`}>Clientes de prueba:</p>
                         <div className="grid grid-cols-2 gap-2">
                             <Button
                                 type="button"
@@ -144,14 +145,14 @@ export default function Login() {
                         </div>
                     </div>
 
-                    <p className="text-xs text-gray-400 mt-2 italic">
+                    <p className={`${text.muted} mt-2 italic`}>
                         Click en un botón y luego "Ingresar" (o Enter)
                     </p>
                 </div>
 
-                <p className="mt-6 text-center text-sm text-muted">
+                <p className={`mt-6 text-center ${text.muted}`}>
                     ¿No tienes cuenta?{' '}
-                    <Link to="/register" className="text-secondary hover:underline">
+                    <Link to="/register" className={`${buttons.link}`}>
                         Regístrate
                     </Link>
                 </p>

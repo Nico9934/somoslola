@@ -1,6 +1,7 @@
 import { Search, Plus } from 'lucide-react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import { text, inputs } from '../../styles';
 
 export default function AdminPageLayout({
     title,
@@ -19,18 +20,18 @@ export default function AdminPageLayout({
             {/* Header */}
             <div className="flex-none bg-white border-b border-gray-200 p-4 md:p-6 sticky top-0 z-20">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <h1 className="text-2xl md:text-3xl font-bold text-primary">{title}</h1>
+                    <h1 className={text.pageTitle}>{title}</h1>
 
                     <div className="flex flex-col sm:flex-row gap-3">
                         {showSearch && onSearchChange && (
                             <div className="relative flex-1 sm:min-w-[300px]">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted" />
+                                <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${text.muted}`} />
                                 <input
                                     type="text"
                                     placeholder={searchPlaceholder}
                                     value={searchTerm}
                                     onChange={onSearchChange}
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary text-sm"
+                                    className={`${inputs.text} w-full pl-10`}
                                 />
                             </div>
                         )}

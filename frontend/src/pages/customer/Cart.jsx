@@ -8,6 +8,8 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import { toast } from 'react-toastify';
+import { text, products, badges, layout, buttons } from '../../styles';
+import { orderSummary } from '../../styles/components';
 
 export default function Cart() {
     const { cart, loading, updateItem, removeItem, clearCart, loadCart } = useCart();
@@ -15,12 +17,12 @@ export default function Cart() {
     const navigate = useNavigate();
 
     useEffect(() => {
+        // Si hay cartId en localStorage pero no hay cart cargado, cargar
         const cartId = localStorage.getItem('cartId');
         if (cartId && !cart) {
             loadCart(cartId);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [cart, loadCart]);
 
     const handleUpdateQuantity = async (variantId, newQuantity) => {
         if (newQuantity < 1) return;
@@ -76,13 +78,13 @@ export default function Cart() {
 
     return (
         <Layout>
-            <div className="max-w-7xl mx-auto px-4 py-8">
-                <h1 className="text-3xl font-bold text-primary mb-6">Carrito de Compras</h1>
+            <div className={layout.container}>
+                <h1 className={text.pageTitle}>Carrito de Compras</h1>
 
                 {!cart || cart.items?.length === 0 ? (
-                    <Card>
-                        <p className="text-center text-muted mb-4">Tu carrito está vacío</p>
-                        <Button onClick={() => navigate('/products')} className="w-full">
+                    <Card variant="bordered">
+                        <p className={`${text.muted} text-center mb-4`}>Tu carrito está vacío</p>
+                        <Button onClick={() => navigate('/products')} className={buttons.full}>
                             Ir a productos
                         </Button>
                     </Card>
@@ -94,7 +96,7 @@ export default function Cart() {
                                 const variantImage = item.variant?.images?.[0]?.url;
 
                                 return (
-                                    <Card key={item.id}>
+                                    <Card key={item.id} variant="bordered">
                                         <div className="flex gap-4">
                                             {/* Imagen de la variante */}
                                             {variantImage ? (
@@ -112,10 +114,10 @@ export default function Cart() {
                                             )}
 
                                             <div className="flex-1">
-                                                <h3 className="font-semibold text-primary">
+                                                <h3 className={products.name}>
                                                     {item.variant?.product?.name}
                                                 </h3>
-                                                <p className="text-sm text-muted mb-1">{item.variant?.sku}</p>
+                                                <p className={`${products.meta} mb-1`}>{item.variant?.sku}</p>
 
                                                 {/* Mostrar atributos de la variante */}
                                                 {item.variant?.attributeValues && item.variant.attributeValues.length > 0 && (
@@ -139,7 +141,7 @@ export default function Cart() {
                                                             return (
                                                                 <span
                                                                     key={av.id}
-                                                                    className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded"
+                                                                    className={badges.default}
                                                                 >
                                                                     {attrValue.value}
                                                                 </span>
@@ -150,20 +152,20 @@ export default function Cart() {
 
                                                 {item.variant?.promotionPrice ? (
                                                     <div className="mt-2">
-                                                        <p className="text-sm text-gray-400 line-through">
+                                                        <p className={`${products.meta} line-through`}>
                                                             ${item.variant.salePrice.toLocaleString()}
                                                         </p>
                                                         <div className="flex items-center gap-2">
-                                                            <p className="text-lg font-bold text-red-600">
+                                                            <p className={products.pricePromo}>
                                                                 ${item.variant.promotionPrice.toLocaleString()}
                                                             </p>
-                                                            <span className="text-xs font-semibold bg-red-100 text-red-600 px-1 py-0.5 rounded">
+                                                            <span className={badges.error}>
                                                                 PROMO
                                                             </span>
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <p className="text-lg font-bold text-secondary mt-2">
+                                                    <p className={`${products.price} mt-2`}>
                                                         ${item.variant?.salePrice?.toLocaleString()}
                                                     </p>
                                                 )}
@@ -201,19 +203,20 @@ export default function Cart() {
                         </div>
 
                         <div>
-                            <Card>
-                                <h2 className="text-xl font-bold text-primary mb-4">Resumen</h2>
-                                <div className="space-y-2 mb-4">
-                                    <div className="flex justify-between">
-                                        <span className="text-muted">Subtotal:</span>
-                                        <span>${total.toLocaleString()}</span>
+                            <Card variant="bordered">
+                                <h2 className={text.sectionTitle}>Resumen</h2>
+                                <div className={orderSummary.container}>
+                                    <div className={orderSummary.row}>
+                                        <span className={orderSummary.label}>Subtotal</span>
+                                        <span className={orderSummary.value}>${total.toLocaleString()}</span>
                                     </div>
-                                    <div className="flex justify-between font-bold text-lg">
-                                        <span>Total:</span>
-                                        <span className="text-secondary">${total.toLocaleString()}</span>
+                                    <div className={orderSummary.divider}></div>
+                                    <div className={orderSummary.totalRow}>
+                                        <span className={orderSummary.totalLabel}>Total</span>
+                                        <span className={orderSummary.totalValue}>${total.toLocaleString()}</span>
                                     </div>
                                 </div>
-                                <Button onClick={handleCheckout} className="w-full" size="lg">
+                                <Button onClick={handleCheckout} className={buttons.full} size="lg">
                                     Finalizar Compra
                                 </Button>
                             </Card>

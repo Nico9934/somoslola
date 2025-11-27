@@ -12,12 +12,15 @@ import HeroCarousel from '../../components/customer/HeroCarousel';
 import ProductFilters from '../../components/customer/ProductFilters';
 import { toast } from 'react-toastify';
 import { FaShoppingCart, FaHeart, FaEye } from 'react-icons/fa';
+import { Search } from 'lucide-react';
+import { text, badges, layout, buttons, products as productStyles, inputs } from '../../styles';
 
 export default function Products() {
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [brands, setBrands] = useState([]);
     const [banners, setBanners] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [selectedFilters, setSelectedFilters] = useState({
         categoryId: null,
         brandId: null,
@@ -74,6 +77,11 @@ export default function Products() {
     };
 
     const filteredProducts = products.filter(product => {
+        // Filtro por búsqueda (nombre)
+        if (searchTerm && !product.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+            return false;
+        }
+
         // Filtro por categoría
         if (selectedFilters.categoryId && product.categoryId !== selectedFilters.categoryId) {
             return false;
@@ -110,7 +118,8 @@ export default function Products() {
     return (
         <Layout>
             {banners.length > 0 && <HeroCarousel banners={banners} />}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+            <div className={layout.containerXWide}>
                 <div className="flex gap-8">
                     {/* Filtros laterales */}
                     <aside className="hidden lg:block">
@@ -126,19 +135,46 @@ export default function Products() {
 
                     {/* Contenido principal */}
                     <div className="flex-1">
-                        <div className="mb-8">
-                            <h1 className="text-3xl font-bold text-primary mb-4">Productos</h1>
+                        <div className="mb-6">
+                            <h1 className={text.pageTitle}>Productos</h1>
+                        </div>
+
+                        {/* Buscador */}
+                        <div className="mb-12 w-full flex justify-end gap-3 items-center">
+                            <div className="relative max-w-md">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar productos..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className={`${inputs.text} w-full pl-10 pr-10`}
+                                />
+                                {searchTerm && (
+                                    <button
+                                        onClick={() => setSearchTerm('')}
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl"
+                                    >
+                                        ×
+                                    </button>
+                                )}
+                            </div>
+                            {searchTerm && (
+                                <p className={`${text.muted} mt-2`}>
+                                    {filteredProducts.length} {filteredProducts.length === 1 ? 'resultado' : 'resultados'}
+                                </p>
+                            )}
                         </div>
 
                         {filteredProducts.length === 0 ? (
-                            <p className="text-center text-muted">No hay productos disponibles</p>
+                            <p className={`${text.muted} text-center`}>No hay productos disponibles</p>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                                 {filteredProducts.map((product) => (
                                     <div key={product.id} className="group relative bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
                                         {/* Badge de promoción */}
                                         {product.variants?.some(v => v.promotionPrice) && (
-                                            <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full z-10">
+                                            <div className={`absolute top-3 left-3 z-10 ${badges.error}`}>
                                                 OFERTA
                                             </div>
                                         )}
@@ -163,7 +199,7 @@ export default function Products() {
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center">
-                                                        <p className="text-muted text-sm">Sin imagen</p>
+                                                        <p className={text.muted}>Sin imagen</p>
                                                     </div>
                                                 );
                                             })()}
@@ -182,13 +218,13 @@ export default function Products() {
                                         {/* Contenido */}
                                         <div className="p-4">
                                             {/* Categoría */}
-                                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                                            <p className={productStyles.meta}>
                                                 {product.category?.name}
                                             </p>
 
                                             {/* Nombre */}
                                             <Link to={`/products/${product.id}`}>
-                                                <h3 className="font-semibold text-gray-800 mb-2 hover:text-secondary transition-colors line-clamp-2 min-h-[3rem]">
+                                                <h3 className={`${productStyles.name} hover:text-black transition-colors line-clamp-2 min-h-[3rem]`}>
                                                     {product.name}
                                                 </h3>
                                             </Link>
@@ -233,15 +269,15 @@ export default function Products() {
                                                     <div className="mb-4 space-y-1">
                                                         {hasPromotion ? (
                                                             <>
-                                                                <p className="text-sm text-gray-400 line-through">
+                                                                <p className={`${productStyles.meta} line-through`}>
                                                                     ${minSalePrice.toLocaleString('es-AR')}
                                                                 </p>
-                                                                <p className="text-xl font-bold text-red-600">
+                                                                <p className={productStyles.pricePromo}>
                                                                     ${minPromoPrice.toLocaleString('es-AR')}
                                                                 </p>
                                                             </>
                                                         ) : (
-                                                            <p className="text-xl font-bold text-gray-900">
+                                                            <p className={productStyles.price}>
                                                                 ${minSalePrice.toLocaleString('es-AR')}
                                                             </p>
                                                         )}
@@ -259,13 +295,13 @@ export default function Products() {
 
                                             {/* Botón de agregar */}
                                             {product.variants && product.variants.length > 0 && (
-                                                <Button
-
+                                                <button
                                                     onClick={() => handleAddToCart(product.variants[0].id)}
-                                                    className="w-full flex items-center justify-around bg-primary hover:bg-secondary transition-colors"
+                                                    className={`${buttons.primary} ${buttons.full} flex items-center justify-center gap-2 group`}
                                                 >
-                                                    <FaShoppingCart className="mr-2" /> Agregar al carrito
-                                                </Button>
+                                                    <FaShoppingCart className="text-sm" />
+                                                    <span className="text-sm">Agregar</span>
+                                                </button>
                                             )}
                                         </div>
                                     </div>

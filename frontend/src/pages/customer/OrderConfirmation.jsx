@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ordersService } from '../../api/orders';
 import Layout from '../../components/ui/Layout';
-import Card from '../../components/ui/Card';
-import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
+import { layout, text, cards, buttons, alerts, upload, products, icons } from '../../styles';
+import { successHeader, orderSummary, actionFooter } from '../../styles/components';
 
 export default function OrderConfirmation() {
     const { orderId } = useParams();
@@ -13,6 +13,7 @@ export default function OrderConfirmation() {
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false);
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         const loadOrder = async () => {
@@ -36,12 +37,14 @@ export default function OrderConfirmation() {
         // Validar que sea una imagen
         if (!file.type.startsWith('image/')) {
             alert('Por favor selecciona una imagen');
+            if (fileInputRef.current) fileInputRef.current.value = '';
             return;
         }
 
         // Validar tamaño (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
             alert('El archivo no debe superar 5MB');
+            if (fileInputRef.current) fileInputRef.current.value = '';
             return;
         }
 
@@ -79,6 +82,8 @@ export default function OrderConfirmation() {
             alert('Error al subir el comprobante. Por favor intenta de nuevo.');
         } finally {
             setUploading(false);
+            // Limpiar el input para permitir subir el mismo archivo de nuevo
+            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
 
@@ -107,51 +112,51 @@ export default function OrderConfirmation() {
 
     return (
         <Layout>
-            <div className="max-w-4xl mx-auto px-4 py-12">
-                {/* Header de confirmación - Minimalista */}
-                <div className="border-b-2 border-black pb-8 mb-10">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="w-6 h-6 border-2 border-black flex items-center justify-center">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={layout.container}>
+                {/* Header de confirmación */}
+                <div className={successHeader.container}>
+                    <div className={successHeader.iconWrapper}>
+                        <div className={successHeader.icon}>
+                            <svg className={icons.check} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
-                        <h1 className="text-3xl font-bold tracking-tight">
+                        <h1 className={successHeader.title}>
                             Pedido confirmado
                         </h1>
                     </div>
-                    <p className="text-gray-600 text-lg mb-2">
+                    <p className={successHeader.subtitle}>
                         Gracias por tu compra. Te enviaremos tu pedido lo antes posible.
                     </p>
-                    <p className="text-sm text-gray-500 mt-4">
+                    <p className={successHeader.meta}>
                         Número de pedido: <strong className="text-black font-mono">#{order.id}</strong>
                     </p>
                 </div>
 
                 {/* Grid de 2 columnas en desktop */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className={layout.grid2Col}>
                     {/* Columna principal (2/3) */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className={layout.gridMain}>
                         {/* Productos */}
                         <div>
-                            <h2 className="text-sm font-bold uppercase tracking-wider mb-4 pb-2 border-b border-gray-300">
+                            <h2 className={text.sectionTitle}>
                                 Productos
                             </h2>
-                            <div className="space-y-4">
+                            <div className={layout.stackMd}>
                                 {order.items?.map((item) => (
-                                    <div key={item.id} className="flex gap-4 pb-4 border-b border-gray-200 last:border-b-0">
+                                    <div key={item.id} className={products.item}>
                                         {item.imageUrl && (
                                             <img
                                                 src={item.imageUrl}
                                                 alt={item.productName}
-                                                className="w-20 h-20 object-cover bg-gray-100"
+                                                className={products.image}
                                             />
                                         )}
                                         <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-base mb-1">{item.productName}</p>
-                                            <p className="text-sm text-gray-500 mb-1">SKU: {item.variantSku}</p>
+                                            <p className={products.name}>{item.productName}</p>
+                                            <p className={products.meta}>SKU: {item.variantSku}</p>
                                             {item.attributes && Object.keys(item.attributes).length > 0 && (
-                                                <p className="text-sm text-gray-500">
+                                                <p className={products.meta}>
                                                     {Object.entries(item.attributes).map(([key, value]) => (
                                                         <span key={key} className="mr-3">
                                                             {key}: {value}
@@ -159,11 +164,11 @@ export default function OrderConfirmation() {
                                                     ))}
                                                 </p>
                                             )}
-                                            <p className="text-sm text-gray-500 mt-1">Cantidad: {item.quantity}</p>
+                                            <p className={`${products.meta} mt-1`}>Cantidad: {item.quantity}</p>
                                         </div>
                                         <div className="text-right flex flex-col justify-between">
-                                            <p className="font-medium text-base">${((item.price || 0) * (item.quantity || 0)).toFixed(2)}</p>
-                                            <p className="text-xs text-gray-500">${(item.price || 0).toFixed(2)} c/u</p>
+                                            <p className={text.value}>${((item.price || 0) * (item.quantity || 0)).toFixed(2)}</p>
+                                            <p className={text.mutedXs}>${(item.price || 0).toFixed(2)} c/u</p>
                                         </div>
                                     </div>
                                 ))}
@@ -172,123 +177,122 @@ export default function OrderConfirmation() {
 
                         {/* Método de pago */}
                         <div>
-                            <h2 className="text-sm font-bold uppercase tracking-wider mb-4 pb-2 border-b border-gray-300">
+                            <h2 className={text.sectionTitle}>
                                 Información de pago
                             </h2>
 
                             {order.paymentMethod === 'TRANSFER' ? (
                                 <>
-                                    <div className="bg-gray-50 border border-gray-300 p-6 mb-4">
-                                        <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Estado</p>
-                                        <p className="font-medium mb-4">En espera de pago</p>
-                                        <p className="text-sm text-gray-700 leading-relaxed">
+                                    <div className={`${cards.background} mb-4`}>
+                                        <p className={text.label}>Estado</p>
+                                        <p className={`${text.value} mb-4`}>En espera de pago</p>
+                                        <p className={text.mutedLeading}>
                                             Realizá la transferencia o depósito a la siguiente cuenta y enviá el comprobante al email indicado abajo.
                                         </p>
                                     </div>
 
-                                    <div className="border border-gray-300 p-6 space-y-4">
+                                    <div className={`${cards.bordered} ${layout.stackMd}`}>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <p className="text-xs uppercase tracking-wider text-gray-500 mb-1">CBU</p>
-                                                <p className="font-mono text-sm font-medium">0000003100012345678901</p>
+                                                <p className={text.label}>CBU</p>
+                                                <p className={text.valueMono}>0000003100012345678901</p>
                                             </div>
                                             <div>
-                                                <p className="text-xs uppercase tracking-wider text-gray-500 mb-1">Alias</p>
-                                                <p className="font-medium">HEADD.CLUB</p>
+                                                <p className={text.label}>Alias</p>
+                                                <p className={text.value}>HEADD.CLUB</p>
                                             </div>
                                         </div>
-                                        <div className="pt-4 border-t border-gray-200">
-                                            <p className="text-xs uppercase tracking-wider text-gray-500 mb-1">Titular</p>
-                                            <p className="font-medium">Rosario Sanchez</p>
+                                        <div className={layout.dividerLight}>
+                                            <p className={text.label}>Titular</p>
+                                            <p className={text.value}>Rosario Sanchez</p>
                                         </div>
                                     </div>
 
-                                    <div className="mt-4 border border-gray-300 p-6">
-                                        <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">
+                                    <div className={`${cards.bordered} mt-4`}>
+                                        <p className={text.labelBlock}>
                                             Subí tu comprobante aquí
                                         </p>
 
                                         {order.paymentProof ? (
-                                            <div className="space-y-3">
-                                                <div className="bg-green-50 border border-green-200 p-4 rounded">
-                                                    <p className="text-sm text-green-800 font-medium mb-2">
+                                            <div className={layout.stack}>
+                                                <div className={alerts.success}>
+                                                    <p className={`${alerts.successText} mb-2`}>
                                                         ✅ Comprobante subido exitosamente
                                                     </p>
                                                     <img
                                                         src={order.paymentProof}
                                                         alt="Comprobante"
-                                                        className="w-full max-w-sm rounded border border-gray-300"
+                                                        className={upload.preview}
                                                     />
                                                 </div>
-                                                <p className="text-xs text-gray-600">
+                                                <p className={text.mutedXs}>
                                                     Revisaremos tu comprobante y confirmaremos tu pedido pronto.
                                                 </p>
                                             </div>
                                         ) : (
-                                            <div className="space-y-3">
-                                                <label className="block">
-                                                    <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        onChange={handleFileUpload}
-                                                        disabled={uploading}
-                                                        className="hidden"
-                                                        id="payment-proof-upload"
-                                                    />
-                                                    <div
-                                                        onClick={() => document.getElementById('payment-proof-upload').click()}
-                                                        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-400 transition-colors"
-                                                    >
-                                                        {uploading ? (
-                                                            <div className="flex flex-col items-center gap-2">
-                                                                <Spinner />
-                                                                <p className="text-sm text-gray-600">Subiendo...</p>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <svg className="mx-auto h-12 w-12 text-gray-400 mb-3" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                                                                </svg>
-                                                                <p className="text-sm text-gray-600 mb-1">
-                                                                    <span className="font-medium text-black">Hacé click para seleccionar</span> o arrastrá la imagen aquí
-                                                                </p>
-                                                                <p className="text-xs text-gray-500">
-                                                                    PNG, JPG hasta 5MB
-                                                                </p>
-                                                            </>
-                                                        )}
-                                                    </div>
+                                            <div className={layout.stack}>
+                                                <input
+                                                    ref={fileInputRef}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleFileUpload}
+                                                    disabled={uploading}
+                                                    className="hidden"
+                                                    id="payment-proof-upload"
+                                                />
+                                                <label
+                                                    htmlFor="payment-proof-upload"
+                                                    className={upload.zone}
+                                                >
+                                                    {uploading ? (
+                                                        <div className="flex flex-col items-center gap-2">
+                                                            <Spinner />
+                                                            <p className={upload.text}>Subiendo...</p>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <svg className={upload.icon} stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                                                            </svg>
+                                                            <p className={upload.text}>
+                                                                <span className={upload.textHighlight}>Hacé click para seleccionar</span> o arrastrá la imagen aquí
+                                                            </p>
+                                                            <p className={upload.textHint}>
+                                                                PNG, JPG hasta 5MB
+                                                            </p>
+                                                        </>
+                                                    )}
                                                 </label>
 
                                                 {uploadSuccess && (
-                                                    <div className="bg-green-50 border border-green-200 p-3 rounded">
-                                                        <p className="text-sm text-green-800 font-medium">
+                                                    <div className={alerts.success}>
+                                                        <p className={alerts.successText}>
                                                             ✅ Comprobante subido correctamente
                                                         </p>
                                                     </div>
                                                 )}
 
-                                                <p className="text-xs text-gray-600">
+                                                <p className={text.mutedXs}>
                                                     También podés enviarlo por email a{' '}
-                                                    <a href="mailto:headd.clubpagos@gmail.com" className="text-black underline font-medium">
+                                                    <a href="mailto:headd.clubpagos@gmail.com" className={buttons.link}>
                                                         headd.clubpagos@gmail.com
                                                     </a>
                                                 </p>
                                             </div>
                                         )}
 
-                                        <p className="text-sm text-gray-600 leading-relaxed mt-4 pt-4 border-t border-gray-200">
+                                        <p className={`${text.mutedLeading} mt-4 pt-4 ${layout.dividerLight}`}>
                                             Despacho: Lunes, miércoles y viernes. Tu pedido será enviado en esos días.
                                         </p>
                                     </div>
                                 </>
                             ) : (
-                                <div className="bg-gray-50 border border-gray-300 p-6">
-                                    <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Método</p>
-                                    <p className="font-medium mb-4">Tarjeta de crédito/débito</p>
-                                    <div className="bg-blue-50 border border-blue-200 p-4 mt-4">
-                                        <p className="text-sm text-blue-900 font-medium mb-2">💳 Pago procesado con Mercado Pago</p>
-                                        <p className="text-xs text-blue-800">
+                                <div className={cards.background}>
+                                    <p className={text.label}>Método</p>
+                                    <p className={`${text.value} mb-4`}>Tarjeta de crédito/débito</p>
+                                    <div className={`${alerts.info} mt-4`}>
+                                        <p className={`${alerts.infoText} mb-2`}>💳 Pago procesado con Mercado Pago</p>
+                                        <p className={text.mutedXs}>
                                             Tu pago fue procesado de forma segura. Recibirás un email de confirmación.
                                         </p>
                                     </div>
@@ -298,25 +302,25 @@ export default function OrderConfirmation() {
                     </div>
 
                     {/* Columna lateral (1/3) */}
-                    <div className="space-y-6">
+                    <div className={layout.gridSidebar}>
                         {/* Totales */}
                         <div>
-                            <h2 className="text-sm font-bold uppercase tracking-wider mb-4 pb-2 border-b border-gray-300">
+                            <h2 className={text.sectionTitle}>
                                 Resumen
                             </h2>
-                            <div className="space-y-3 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Subtotal</span>
-                                    <span className="font-medium">${((order.total || 0) - (order.shippingCost || 0)).toFixed(2)}</span>
+                            <div className={orderSummary.container}>
+                                <div className={orderSummary.row}>
+                                    <span className={orderSummary.label}>Subtotal</span>
+                                    <span className={orderSummary.value}>${((order.total || 0) - (order.shippingCost || 0)).toFixed(2)}</span>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Envío</span>
-                                    <span className="font-medium">${(order.shippingCost || 0).toFixed(2)}</span>
+                                <div className={orderSummary.row}>
+                                    <span className={orderSummary.label}>Envío</span>
+                                    <span className={orderSummary.value}>${(order.shippingCost || 0).toFixed(2)}</span>
                                 </div>
-                                <div className="border-t border-gray-300 pt-3">
-                                    <div className="flex justify-between text-base">
-                                        <span className="font-bold">Total</span>
-                                        <span className="font-bold">${(order.total || 0).toFixed(2)}</span>
+                                <div className={orderSummary.divider}>
+                                    <div className={orderSummary.total}>
+                                        <span className={orderSummary.totalLabel}>Total</span>
+                                        <span className={orderSummary.totalValue}>${(order.total || 0).toFixed(2)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -324,32 +328,32 @@ export default function OrderConfirmation() {
 
                         {/* Datos de envío */}
                         <div>
-                            <h2 className="text-sm font-bold uppercase tracking-wider mb-4 pb-2 border-b border-gray-300">
+                            <h2 className={text.sectionTitle}>
                                 Envío
                             </h2>
-                            <div className="space-y-2 text-sm">
-                                <p className="font-medium">{order.customerName}</p>
-                                <p className="text-gray-600">{order.customerPhone}</p>
-                                <p className="text-gray-600">{order.email}</p>
-                                <div className="pt-3 mt-3 border-t border-gray-200">
-                                    <p className="text-gray-600">
+                            <div className={`${layout.stackSm} ${text.sm}`}>
+                                <p className={text.value}>{order.customerName}</p>
+                                <p className={text.muted}>{order.customerPhone}</p>
+                                <p className={text.muted}>{order.email}</p>
+                                <div className={layout.dividerLight}>
+                                    <p className={text.muted}>
                                         {order.shippingAddress}
                                         {order.shippingNeighborhood && `, ${order.shippingNeighborhood}`}
                                     </p>
-                                    <p className="text-gray-600">
+                                    <p className={text.muted}>
                                         {order.shippingCity}, CP {order.shippingPostalCode}
                                     </p>
-                                    <p className="text-gray-600">{order.shippingState}</p>
+                                    <p className={text.muted}>{order.shippingState}</p>
                                 </div>
                             </div>
                         </div>
 
                         {/* Método de envío */}
                         <div>
-                            <h2 className="text-sm font-bold uppercase tracking-wider mb-4 pb-2 border-b border-gray-300">
+                            <h2 className={text.sectionTitle}>
                                 Método de envío
                             </h2>
-                            <p className="text-sm text-gray-600">
+                            <p className={text.muted}>
                                 Correo Argentino - Envío a domicilio
                             </p>
                         </div>
@@ -357,26 +361,26 @@ export default function OrderConfirmation() {
                 </div>
 
                 {/* Footer con acciones */}
-                <div className="mt-12 pt-8 border-t border-gray-300">
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+                <div className={actionFooter.container}>
+                    <div className={actionFooter.buttons}>
                         <button
                             onClick={() => navigate('/products')}
-                            className="px-6 py-3 border-2 border-black text-black font-medium hover:bg-black hover:text-white transition-colors"
+                            className={buttons.secondary}
                         >
                             Seguir comprando
                         </button>
                         <button
                             onClick={() => navigate('/orders')}
-                            className="px-6 py-3 bg-black text-white font-medium hover:bg-gray-800 transition-colors"
+                            className={buttons.primary}
                         >
                             Ver mis pedidos
                         </button>
                     </div>
 
-                    <div className="text-center text-sm text-gray-500">
+                    <div className={actionFooter.help}>
                         <p>
                             ¿Necesitás ayuda?{' '}
-                            <a href="mailto:headd.clubpagos@gmail.com" className="text-black underline font-medium hover:no-underline">
+                            <a href="mailto:headd.clubpagos@gmail.com" className={buttons.link}>
                                 Contactanos
                             </a>
                         </p>

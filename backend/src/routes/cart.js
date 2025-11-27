@@ -120,7 +120,19 @@ router.post("/", async (req, res) => {
     console.log('🔍 Buscando carrito existente para usuario:', userId);
     const existing = await prisma.cart.findFirst({
       where: { userId },
-      include: { items: true }
+      include: {
+        items: {
+          include: {
+            variant: {
+              include: {
+                product: true,
+                images: true,
+                stock: true,
+              },
+            },
+          },
+        },
+      },
     });
     if (existing) {
       console.log('✅ Carrito existente encontrado:', { id: existing.id, cantidadItems: existing.items.length });

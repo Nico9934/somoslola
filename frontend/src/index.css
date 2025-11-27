@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Importar tema minimalista */
+@import './styles/minimal-theme.css';
+
 @layer base {
     :root {
         --color-primary: 17 24 39;

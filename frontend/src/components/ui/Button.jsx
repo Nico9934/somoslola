@@ -1,29 +1,37 @@
+import { buttons, states } from '../../styles';
+
 export default function Button({
     children,
     variant = 'primary',
     size = 'md',
+    disabled = false,
     className = '',
     ...props
 }) {
-    const baseStyles = 'font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
-
-    const variants = {
-        primary: 'bg-secondary hover:bg-secondary-dark text-white',
-        secondary: 'bg-primary hover:bg-primary-light text-white',
-        outline: 'border-2 border-primary text-primary hover:bg-primary hover:text-white',
-        ghost: 'text-primary hover:bg-gray-100',
-        danger: 'bg-red-500 hover:bg-red-600 text-white',
+    // Mapeo de variantes a nuestro sistema de diseño
+    const variantMap = {
+        primary: buttons.primary,
+        secondary: buttons.secondary,
+        outline: buttons.outline,
+        ghost: 'text-black hover:bg-gray-100 transition-colors',
+        danger: 'px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-medium transition-colors',
     };
 
-    const sizes = {
-        sm: 'px-3 py-1.5 text-sm',
-        md: 'px-4 py-2',
-        lg: 'px-6 py-3 text-lg',
+    // Mapeo de tamaños
+    const sizeMap = {
+        sm: buttons.sm,
+        md: buttons.md,
+        lg: buttons.lg,
     };
+
+    const variantClass = variantMap[variant] || variantMap.primary;
+    const sizeClass = sizeMap[size] || sizeMap.md;
+    const disabledClass = disabled ? states.disabled : '';
 
     return (
         <button
-            className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+            className={`${variantClass} ${sizeClass} ${disabledClass} ${className}`}
+            disabled={disabled}
             {...props}
         >
             {children}

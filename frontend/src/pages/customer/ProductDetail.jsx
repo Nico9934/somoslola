@@ -9,6 +9,7 @@ import Spinner from '../../components/ui/Spinner';
 import PriceDisplay from '../../components/customer/PriceDisplay';
 import { toast } from 'react-toastify';
 import { FaShoppingCart, FaBox, FaTag, FaDollarSign } from 'react-icons/fa';
+import { text, badges, layout, buttons, products as productStyles } from '../../styles';
 
 export default function ProductDetail() {
     const { id } = useParams();
@@ -132,7 +133,7 @@ export default function ProductDetail() {
 
     return (
         <Layout>
-            <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className={layout.container}>
                 <Button variant="ghost" onClick={() => navigate('/products')} className="mb-4">
                     ← Volver
                 </Button>
@@ -178,15 +179,15 @@ export default function ProductDetail() {
                                 </div>
                             ) : (
                                 <div className="bg-gray-200 rounded-lg h-96 flex items-center justify-center">
-                                    <p className="text-muted">Sin imagen</p>
+                                    <p className={text.muted}>Sin imagen</p>
                                 </div>
                             );
                         })()}
                     </div>
 
                     <div>
-                        <h1 className="text-3xl font-bold text-primary mb-2">{product.name}</h1>
-                        <p className="text-muted mb-4">{product.category?.name}</p>
+                        <h1 className={text.pageTitle}>{product.name}</h1>
+                        <p className={`${text.muted} mb-4`}>{product.category?.name}</p>
 
                         {/* Mostrar precio de variante seleccionada o rango */}
                         {/* Precio con opciones de pago */}
@@ -232,12 +233,12 @@ export default function ProductDetail() {
                             }
                         })()}
 
-                        <p className="text-muted mb-6">{product.description}</p>
+                        <p className={`${text.muted} mb-6`}>{product.description}</p>
 
                         {/* Tabla de variantes disponibles */}
                         {product.variants && product.variants.length > 0 && (
-                            <Card className="mb-6">
-                                <h3 className="font-semibold text-primary mb-4 flex items-center gap-2">
+                            <Card variant="bordered" className="mb-6">
+                                <h3 className={`${text.label} mb-4 flex items-center gap-2`}>
                                     <FaBox /> Variantes disponibles
                                 </h3>
                                 <div className="overflow-x-auto">
@@ -299,7 +300,7 @@ export default function ProductDetail() {
                                                                         return (
                                                                             <span
                                                                                 key={av.id}
-                                                                                className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded font-medium"
+                                                                                className={badges.default}
                                                                             >
                                                                                 {attrValue.attribute?.name}: {attrValue.value}
                                                                             </span>
@@ -316,15 +317,15 @@ export default function ProductDetail() {
                                                             <div>
                                                                 {hasPromotion ? (
                                                                     <>
-                                                                        <p className="text-xs text-gray-400 line-through">
+                                                                        <p className={`${productStyles.meta} line-through`}>
                                                                             ${variant.salePrice.toLocaleString('es-AR')}
                                                                         </p>
-                                                                        <p className="text-lg font-bold text-red-600">
+                                                                        <p className={productStyles.pricePromo}>
                                                                             ${variant.promotionPrice.toLocaleString('es-AR')}
                                                                         </p>
                                                                     </>
                                                                 ) : (
-                                                                    <p className="text-lg font-bold text-gray-900">
+                                                                    <p className={productStyles.price}>
                                                                         ${variant.salePrice.toLocaleString('es-AR')}
                                                                     </p>
                                                                 )}
@@ -369,7 +370,7 @@ export default function ProductDetail() {
                         )}
 
                         <div className="mb-6">
-                            <label className="block text-sm font-medium text-primary mb-2">
+                            <label className={`block mb-2 ${text.label}`}>
                                 Cantidad:
                             </label>
                             <input
@@ -384,8 +385,8 @@ export default function ProductDetail() {
 
                         {/* Resumen de compra */}
                         {selectedVariant && (
-                            <Card className="mb-6 bg-gray-50 border-2 border-secondary">
-                                <h4 className="font-semibold text-primary mb-3 flex items-center gap-2">
+                            <Card variant="bordered" className="mb-6 bg-gray-50">
+                                <h4 className={`${text.label} mb-3 flex items-center gap-2`}>
                                     <FaShoppingCart /> Resumen de compra
                                 </h4>
                                 <div className="space-y-2 text-sm">
@@ -402,17 +403,17 @@ export default function ProductDetail() {
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600">Precio unitario:</span>
                                                 <div className="text-right">
-                                                    <p className="text-xs text-gray-400 line-through">
+                                                    <p className={`${productStyles.meta} line-through`}>
                                                         ${selectedVariant.salePrice.toLocaleString()}
                                                     </p>
-                                                    <p className="font-bold text-red-600">
+                                                    <p className={productStyles.pricePromo}>
                                                         ${selectedVariant.promotionPrice.toLocaleString()}
                                                     </p>
                                                 </div>
                                             </div>
                                             <div className="border-t pt-2 flex justify-between items-center">
                                                 <span className="text-lg font-bold text-gray-800">Total:</span>
-                                                <span className="text-2xl font-bold text-red-600">
+                                                <span className={`text-2xl ${productStyles.pricePromo}`}>
                                                     ${(selectedVariant.promotionPrice * quantity).toLocaleString()}
                                                 </span>
                                             </div>
@@ -424,11 +425,11 @@ export default function ProductDetail() {
                                         <>
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600">Precio unitario:</span>
-                                                <span className="font-bold">${selectedVariant.salePrice.toLocaleString()}</span>
+                                                <span className={productStyles.price}>${selectedVariant.salePrice.toLocaleString()}</span>
                                             </div>
                                             <div className="border-t pt-2 flex justify-between items-center">
                                                 <span className="text-lg font-bold text-gray-800">Total:</span>
-                                                <span className="text-2xl font-bold text-secondary">
+                                                <span className={`text-2xl ${productStyles.price}`}>
                                                     ${(selectedVariant.salePrice * quantity).toLocaleString()}
                                                 </span>
                                             </div>
@@ -444,7 +445,7 @@ export default function ProductDetail() {
                         <Button
                             onClick={handleAddToCart}
                             disabled={!selectedVariant || selectedVariant.stock?.quantity === 0}
-                            className="w-full bg-secondary hover:bg-primary transition-colors"
+                            className={`${buttons.full} flex items-center justify-center`}
                             size="lg"
                         >
                             <FaShoppingCart className="mr-2" />

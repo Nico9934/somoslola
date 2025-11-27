@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import Button from './Button';
+import { text, buttons } from '../../styles';
 
 export default function Modal({ isOpen, onClose, title, children, size = 'md' }) {
     useEffect(() => {
@@ -28,12 +28,12 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
                 className="absolute inset-0 bg-black bg-opacity-50"
                 onClick={onClose}
             />
-            <div className={`relative bg-white rounded-lg shadow-xl ${sizeClasses[size]} w-full mx-4 max-h-[90vh] overflow-y-auto`}>
-                <div className="flex items-center justify-between p-6 border-b">
-                    <h2 className="text-xl font-semibold text-primary">{title}</h2>
+            <div className={`relative bg-white rounded-lg shadow-xl ${sizeClasses[size]} w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-300`}>
+                <div className="flex items-center justify-between p-6 border-b border-gray-300">
+                    <h2 className={text.pageTitle}>{title}</h2>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 text-2xl"
+                        className="text-gray-400 hover:text-black text-2xl transition-colors"
                     >
                         ×
                     </button>

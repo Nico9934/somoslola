@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
+import { text, buttons, inputs, cards } from '../../styles';
 
 export default function ProductFilters({
     categories,
@@ -64,14 +65,14 @@ export default function ProductFilters({
     };
 
     return (
-        <div className="w-full lg:w-64 bg-white rounded-lg shadow-sm p-6 sticky top-32 max-h-[calc(100vh-150px)] overflow-y-auto">
+        <div className={`${cards.bordered} w-full lg:w-64 sticky top-32 max-h-[calc(100vh-150px)] overflow-y-auto`}>
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-800">Filtros</h2>
+                <h2 className={text.sectionTitle}>Filtros</h2>
                 {hasActiveFilters && (
                     <button
                         onClick={onClearFilters}
-                        className="text-sm text-primary hover:text-secondary flex items-center gap-1"
+                        className={`${buttons.link} text-sm flex items-center gap-1`}
                     >
                         <X className="w-4 h-4" />
                         Limpiar
@@ -81,7 +82,7 @@ export default function ProductFilters({
 
             {/* Resultados */}
             <div className="mb-6 pb-6 border-b">
-                <p className="text-sm text-gray-600">
+                <p className={text.muted}>
                     <span className="font-semibold text-gray-800">{productCount}</span> productos encontrados
                 </p>
             </div>
@@ -92,7 +93,7 @@ export default function ProductFilters({
                     onClick={() => toggleSection('categories')}
                     className="flex justify-between items-center w-full mb-3"
                 >
-                    <h3 className="font-semibold text-gray-800">CATEGORÍAS</h3>
+                    <h3 className={text.label}>CATEGORÍAS</h3>
                     {expandedSections.categories ? (
                         <ChevronUp className="w-4 h-4 text-gray-500" />
                     ) : (
@@ -111,9 +112,9 @@ export default function ProductFilters({
                                     type="checkbox"
                                     checked={selectedFilters.categoryId === category.id}
                                     onChange={() => handleCategoryChange(category.id)}
-                                    className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
+                                    className={inputs.checkbox}
                                 />
-                                <span className="ml-3 text-sm text-gray-700 group-hover:text-primary transition">
+                                <span className={`ml-3 ${text.muted} group-hover:text-black transition`}>
                                     {category.name}
                                 </span>
                             </label>
@@ -129,7 +130,7 @@ export default function ProductFilters({
                         onClick={() => toggleSection('brands')}
                         className="flex justify-between items-center w-full mb-3"
                     >
-                        <h3 className="font-semibold text-gray-800">MARCAS</h3>
+                        <h3 className={text.label}>MARCAS</h3>
                         {expandedSections.brands ? (
                             <ChevronUp className="w-4 h-4 text-gray-500" />
                         ) : (
@@ -148,9 +149,9 @@ export default function ProductFilters({
                                         type="checkbox"
                                         checked={selectedFilters.brandId === brand.id}
                                         onChange={() => handleBrandChange(brand.id)}
-                                        className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
+                                        className={inputs.checkbox}
                                     />
-                                    <span className="ml-3 text-sm text-gray-700 group-hover:text-primary transition">
+                                    <span className={`ml-3 ${text.muted} group-hover:text-black transition`}>
                                         {brand.name}
                                     </span>
                                 </label>
@@ -166,7 +167,7 @@ export default function ProductFilters({
                     onClick={() => toggleSection('price')}
                     className="flex justify-between items-center w-full mb-3"
                 >
-                    <h3 className="font-semibold text-gray-800">PRECIO</h3>
+                    <h3 className={text.label}>PRECIO</h3>
                     {expandedSections.price ? (
                         <ChevronUp className="w-4 h-4 text-gray-500" />
                     ) : (
@@ -189,7 +190,7 @@ export default function ProductFilters({
 
                         {/* Slider Mínimo */}
                         <div>
-                            <label className="block text-xs text-gray-600 mb-2">Precio Mínimo</label>
+                            <label className={`block mb-2 ${text.muted}`}>Precio Mínimo</label>
                             <input
                                 type="range"
                                 min={MIN_PRICE}
@@ -203,7 +204,7 @@ export default function ProductFilters({
 
                         {/* Slider Máximo */}
                         <div>
-                            <label className="block text-xs text-gray-600 mb-2">Precio Máximo</label>
+                            <label className={`block mb-2 ${text.muted}`}>Precio Máximo</label>
                             <input
                                 type="range"
                                 min={MIN_PRICE}
@@ -219,7 +220,7 @@ export default function ProductFilters({
                         {selectedFilters.priceRange && (
                             <button
                                 onClick={handleClearPrice}
-                                className="text-sm text-gray-500 hover:text-primary transition-colors"
+                                className={`${buttons.link} text-sm`}
                             >
                                 Limpiar precio
                             </button>

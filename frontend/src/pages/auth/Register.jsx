@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
+import { text, buttons, alerts } from '../../styles';
 
 export default function Register() {
     const [email, setEmail] = useState('');
@@ -41,12 +42,12 @@ export default function Register() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background-dark">
-            <Card className="w-full max-w-md">
-                <h1 className="text-3xl font-bold text-primary mb-6 text-center">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <Card variant="bordered" className="w-full max-w-md">
+                <h1 className={`${text.pageTitle} text-center`}>
                     SOMOSLOLA
                 </h1>
-                <h2 className="text-xl text-muted mb-6 text-center">Crear Cuenta</h2>
+                <h2 className={`${text.sectionTitle} text-center`}>Crear Cuenta</h2>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <Input
@@ -77,21 +78,21 @@ export default function Register() {
                     />
 
                     {error && (
-                        <p className="text-red-500 text-sm">{error}</p>
+                        <p className={alerts.errorText}>{error}</p>
                     )}
 
                     <Button
                         type="submit"
-                        className="w-full"
+                        className={buttons.full}
                         disabled={loading}
                     >
                         {loading ? 'Registrando...' : 'Registrarse'}
                     </Button>
                 </form>
 
-                <p className="mt-6 text-center text-sm text-muted">
+                <p className={`mt-6 text-center ${text.muted}`}>
                     ¿Ya tienes cuenta?{' '}
-                    <Link to="/login" className="text-secondary hover:underline">
+                    <Link to="/login" className={buttons.link}>
                         Inicia sesión
                     </Link>
                 </p>

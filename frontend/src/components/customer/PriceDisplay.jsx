@@ -1,3 +1,5 @@
+import { badges, products as productStyles } from '../../styles';
+
 /**
  * Componente para mostrar precios con diferentes opciones de pago
  * - Precio de lista (salePrice)
@@ -24,10 +26,10 @@ export default function PriceDisplay({
             {/* Precio de Lista */}
             {hasPromotion && (
                 <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500 line-through">
+                    <span className={`${productStyles.meta} line-through`}>
                         ${salePrice.toLocaleString('es-AR')}
                     </span>
-                    <span className="text-xs font-semibold bg-red-100 text-red-600 px-2 py-1 rounded">
+                    <span className={badges.error}>
                         -{Math.round(((salePrice - promotionPrice) / salePrice) * 100)}% OFF
                     </span>
                 </div>
@@ -35,11 +37,11 @@ export default function PriceDisplay({
 
             {/* Precio Principal (Lista o Promoción) */}
             <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-gray-900">
+                <span className={`text-3xl ${productStyles.price}`}>
                     ${basePrice.toLocaleString('es-AR')}
                 </span>
                 {!hasPromotion && (
-                    <span className="text-sm text-gray-500">Precio de lista</span>
+                    <span className={productStyles.meta}>Precio de lista</span>
                 )}
             </div>
 

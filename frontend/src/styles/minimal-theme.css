@@ -1,0 +1,374 @@
+/* ========================================
+   SOMOSLOLA - MINIMAL DESIGN SYSTEM
+   ======================================== */
+
+/* === LAYOUT === */
+.page-container {
+    @apply max-w-4xl mx-auto px-4 py-12;
+}
+
+.page-container-wide {
+    @apply max-w-6xl mx-auto px-4 py-12;
+}
+
+.page-container-narrow {
+    @apply max-w-2xl mx-auto px-4 py-12;
+}
+
+/* === HEADERS === */
+.page-header {
+    @apply border-b-2 border-black pb-8 mb-10;
+}
+
+.page-title {
+    @apply text-3xl font-bold tracking-tight;
+}
+
+.page-subtitle {
+    @apply text-gray-600 text-lg mb-2;
+}
+
+.section-title {
+    @apply text-sm font-bold uppercase tracking-wider mb-4 pb-2 border-b border-gray-300;
+}
+
+/* === BUTTONS === */
+.btn-primary {
+    @apply px-6 py-3 bg-black text-white font-medium hover:bg-gray-800 transition-colors;
+}
+
+.btn-secondary {
+    @apply px-6 py-3 border-2 border-black text-black font-medium hover:bg-black hover:text-white transition-colors;
+}
+
+.btn-outline {
+    @apply px-4 py-2 border border-gray-300 text-gray-700 font-medium hover:border-black hover:text-black transition-colors;
+}
+
+.btn-sm {
+    @apply px-4 py-2 text-sm;
+}
+
+.btn-lg {
+    @apply px-8 py-4 text-lg;
+}
+
+/* === CARDS === */
+.card-minimal {
+    @apply border border-gray-300 p-6;
+}
+
+.card-subtle {
+    @apply bg-gray-50 border border-gray-300 p-6;
+}
+
+.card-highlight {
+    @apply border-2 border-black p-6;
+}
+
+/* === BORDERS & DIVIDERS === */
+.divider {
+    @apply border-t border-gray-300 my-6;
+}
+
+.divider-dark {
+    @apply border-t-2 border-black my-8;
+}
+
+.divider-light {
+    @apply border-t border-gray-200 my-4;
+}
+
+/* === INPUTS === */
+.input-minimal {
+    @apply w-full px-4 py-3 border-2 border-gray-300 focus:border-black focus:outline-none transition-colors;
+}
+
+.input-error {
+    @apply border-red-500 focus:border-red-500;
+}
+
+.label-minimal {
+    @apply text-xs uppercase tracking-wider text-gray-500 mb-2 block;
+}
+
+/* === FILE UPLOAD === */
+.upload-area {
+    @apply border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-400 transition-colors;
+}
+
+.upload-area-active {
+    @apply border-black bg-gray-50;
+}
+
+/* === BADGES & STATUS === */
+.badge {
+    @apply inline-block px-3 py-1 text-xs font-medium uppercase tracking-wider;
+}
+
+.badge-pending {
+    @apply bg-yellow-100 text-yellow-800 border border-yellow-200;
+}
+
+.badge-success {
+    @apply bg-green-100 text-green-800 border border-green-200;
+}
+
+.badge-error {
+    @apply bg-red-100 text-red-800 border border-red-200;
+}
+
+.badge-info {
+    @apply bg-blue-100 text-blue-800 border border-blue-200;
+}
+
+/* === ALERTS === */
+.alert-success {
+    @apply bg-green-50 border border-green-200 p-4 text-sm text-green-800;
+}
+
+.alert-error {
+    @apply bg-red-50 border border-red-200 p-4 text-sm text-red-800;
+}
+
+.alert-warning {
+    @apply bg-yellow-50 border border-yellow-200 p-4 text-sm text-yellow-800;
+}
+
+.alert-info {
+    @apply bg-blue-50 border border-blue-200 p-4 text-sm text-blue-800;
+}
+
+/* === GRID LAYOUTS === */
+.grid-2-1 {
+    @apply grid grid-cols-1 lg:grid-cols-3 gap-8;
+}
+
+.grid-2-1-main {
+    @apply lg:col-span-2 space-y-6;
+}
+
+.grid-2-1-sidebar {
+    @apply space-y-6;
+}
+
+.grid-2 {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+}
+
+.grid-3 {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+}
+
+/* === PRODUCT LIST === */
+.product-item {
+    @apply flex gap-4 pb-4 border-b border-gray-200 last:border-b-0;
+}
+
+.product-image {
+    @apply w-20 h-20 object-cover bg-gray-100;
+}
+
+.product-image-lg {
+    @apply w-32 h-32 object-cover bg-gray-100;
+}
+
+/* === TEXT STYLES === */
+.text-label {
+    @apply text-xs uppercase tracking-wider text-gray-500;
+}
+
+.text-value {
+    @apply font-medium text-black;
+}
+
+.text-muted {
+    @apply text-gray-600;
+}
+
+.text-mono {
+    @apply font-mono text-sm;
+}
+
+/* === LINKS === */
+.link-minimal {
+    @apply text-black underline font-medium hover:no-underline transition-all;
+}
+
+.link-subtle {
+    @apply text-gray-600 hover:text-black underline transition-colors;
+}
+
+/* === ICONS === */
+.icon-check {
+    @apply w-6 h-6 border-2 border-black flex items-center justify-center;
+}
+
+/* === SPACING === */
+.section-spacing {
+    @apply space-y-6;
+}
+
+.content-spacing {
+    @apply space-y-4;
+}
+
+.tight-spacing {
+    @apply space-y-2;
+}
+
+/* === CHECKBOXES & RADIO === */
+.checkbox-minimal {
+    @apply w-5 h-5 border-2 border-gray-300 text-black focus:ring-0 focus:ring-offset-0 cursor-pointer;
+}
+
+.radio-minimal {
+    @apply w-5 h-5 border-2 border-gray-300 text-black focus:ring-0 focus:ring-offset-0 cursor-pointer;
+}
+
+/* === TABLES === */
+.table-minimal {
+    @apply w-full border-collapse;
+}
+
+.table-minimal th {
+    @apply text-left text-xs uppercase tracking-wider text-gray-500 pb-3 border-b border-gray-300 font-bold;
+}
+
+.table-minimal td {
+    @apply py-4 border-b border-gray-200;
+}
+
+.table-minimal tr:last-child td {
+    @apply border-b-0;
+}
+
+/* === INFO BOXES === */
+.info-box {
+    @apply border border-gray-300 p-6 space-y-4;
+}
+
+.info-box-highlight {
+    @apply bg-gray-50 border border-gray-300 p-6;
+}
+
+.info-row {
+    @apply grid grid-cols-2 gap-4;
+}
+
+.info-item {
+    @apply space-y-1;
+}
+
+/* === PRICE DISPLAY === */
+.price-lg {
+    @apply text-2xl font-bold;
+}
+
+.price-md {
+    @apply text-lg font-medium;
+}
+
+.price-sm {
+    @apply text-sm font-medium;
+}
+
+/* === RESPONSIVE UTILITIES === */
+.mobile-only {
+    @apply block md:hidden;
+}
+
+.desktop-only {
+    @apply hidden md:block;
+}
+
+/* === HOVER EFFECTS === */
+.hover-lift {
+    @apply transition-transform hover:-translate-y-1;
+}
+
+.hover-border {
+    @apply transition-colors hover:border-black;
+}
+
+/* === LOADING STATES === */
+.skeleton {
+    @apply animate-pulse bg-gray-200;
+}
+
+.disabled {
+    @apply opacity-50 cursor-not-allowed;
+}
+
+/* === FORMS === */
+.form-group {
+    @apply space-y-2;
+}
+
+.form-error {
+    @apply text-xs text-red-600 mt-1;
+}
+
+.form-hint {
+    @apply text-xs text-gray-500 mt-1;
+}
+
+/* === MODALS === */
+.modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
+}
+
+.modal-content {
+    @apply bg-white border-2 border-black max-w-2xl w-full max-h-[90vh] overflow-y-auto;
+}
+
+.modal-header {
+    @apply border-b border-gray-300 p-6;
+}
+
+.modal-body {
+    @apply p-6;
+}
+
+.modal-footer {
+    @apply border-t border-gray-300 p-6 flex gap-4 justify-end;
+}
+
+/* === BREADCRUMBS === */
+.breadcrumb {
+    @apply flex items-center gap-2 text-sm text-gray-600 mb-6;
+}
+
+.breadcrumb-separator {
+    @apply text-gray-400;
+}
+
+.breadcrumb-active {
+    @apply text-black font-medium;
+}
+
+/* === PAGINATION === */
+.pagination {
+    @apply flex items-center gap-2;
+}
+
+.pagination-btn {
+    @apply px-3 py-1 border border-gray-300 hover:border-black transition-colors;
+}
+
+.pagination-btn-active {
+    @apply bg-black text-white border-black;
+}
+
+/* === DROPDOWN === */
+.dropdown {
+    @apply relative;
+}
+
+.dropdown-menu {
+    @apply absolute top-full mt-2 bg-white border border-gray-300 shadow-lg z-10 min-w-[200px];
+}
+
+.dropdown-item {
+    @apply block px-4 py-2 hover:bg-gray-100 transition-colors border-b border-gray-200 last:border-b-0;
+}

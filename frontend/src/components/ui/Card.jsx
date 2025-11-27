@@ -1,9 +1,19 @@
-export default function Card({ children, className = '', hover = false }) {
+import { cards } from '../../styles';
+
+export default function Card({ children, className = '', hover = false, variant = 'bordered' }) {
+    // Mapeo de variantes
+    const variantMap = {
+        bordered: cards.bordered,
+        background: cards.background,
+        shadow: cards.shadow,
+        interactive: cards.interactive,
+    };
+
+    const baseClass = variantMap[variant] || variantMap.bordered;
+    const hoverClass = hover ? 'hover:shadow-lg transition-shadow' : '';
+
     return (
-        <div
-            className={`bg-white rounded-lg shadow-md p-6 ${hover ? 'transition-shadow hover:shadow-lg' : ''
-                } ${className}`}
-        >
+        <div className={`${baseClass} ${hoverClass} ${className}`}>
             {children}
         </div>
     );

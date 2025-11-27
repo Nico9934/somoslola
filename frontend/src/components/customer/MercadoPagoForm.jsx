@@ -1,4 +1,5 @@
 import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react';
+import { alerts } from '../../styles';
 
 // Inicializar Mercado Pago con la Public Key
 const publicKey = import.meta.env.VITE_MP_PUBLIC_KEY;
@@ -18,16 +19,16 @@ export default function MercadoPagoForm({ amount, onSubmit, onError }) {
 
     if (!publicKey) {
         return (
-            <div className="text-center py-8 text-red-600">
-                <p>Error: VITE_MP_PUBLIC_KEY no está configurada</p>
+            <div className="text-center py-8">
+                <p className={alerts.errorText}>Error: VITE_MP_PUBLIC_KEY no está configurada</p>
             </div>
         );
     }
 
     if (validAmount === 0) {
         return (
-            <div className="text-center py-8 text-red-600">
-                <p>Error: El monto debe ser mayor a 0</p>
+            <div className="text-center py-8">
+                <p className={alerts.errorText}>Error: El monto debe ser mayor a 0</p>
             </div>
         );
     }

@@ -9,9 +9,11 @@ import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import MercadoPagoForm from '../../components/customer/MercadoPagoForm';
 import { toast } from 'react-toastify';
+import { text, badges, layout, buttons, inputs, alerts } from '../../styles';
+import { orderSummary } from '../../styles/components';
 
 export default function Checkout() {
-    const { cart, clearCart } = useCart();
+    const { cart, clearCart, loadCart } = useCart();
     const { user } = useAuth();
     const navigate = useNavigate();
 
@@ -19,6 +21,7 @@ export default function Checkout() {
     const [loading, setLoading] = useState(false);
     const [calculatingShipping, setCalculatingShipping] = useState(false);
     const [processingPayment, setProcessingPayment] = useState(false);
+    const [orderCompleted, setOrderCompleted] = useState(false); // Nueva bandera
 
     // Datos del formulario
     const [formData, setFormData] = useState({
@@ -38,12 +41,12 @@ export default function Checkout() {
     });
 
     useEffect(() => {
-        // Redirigir si no hay carrito o está vacío
-        if (!cart || cart.items?.length === 0) {
+        // Redirigir si no hay carrito o está vacío (pero NO si ya se completó la orden)
+        if (!orderCompleted && (!cart || cart.items?.length === 0)) {
             toast.warning('Tu carrito está vacío');
             navigate('/products');
         }
-    }, [cart, navigate]);
+    }, [cart, navigate, orderCompleted]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -106,10 +109,13 @@ export default function Checkout() {
         // Solo para transferencia bancaria
         setLoading(true);
         try {
-            const cartId = localStorage.getItem('cartId');
+            if (!cart?.id) {
+                toast.error('Error: No se encontró el carrito');
+                return;
+            }
 
             const orderData = {
-                cartId,
+                cartId: cart.id,
                 email: formData.email,
                 customerName: formData.customerName,
                 customerPhone: formData.customerPhone,
@@ -126,6 +132,9 @@ export default function Checkout() {
 
             console.log('✅ Orden creada:', data);
             toast.success('¡Pedido realizado con éxito! 🎉');
+
+            // Marcar que la orden se completó (previene redirección)
+            setOrderCompleted(true);
 
             // Limpiar carrito
             clearCart();
@@ -149,11 +158,14 @@ export default function Checkout() {
         setProcessingPayment(true);
 
         try {
-            const cartId = localStorage.getItem('cartId');
+            if (!cart?.id) {
+                toast.error('Error: No se encontró el carrito');
+                return;
+            }
 
             // 1. Crear la orden primero
             const orderData = {
-                cartId,
+                cartId: cart.id,
                 email: formData.email,
                 customerName: formData.customerName,
                 customerPhone: formData.customerPhone,
@@ -185,6 +197,9 @@ export default function Checkout() {
 
             if (result.success) {
                 toast.success('¡Pago procesado con éxito! 🎉');
+
+                // Marcar que la orden se completó
+                setOrderCompleted(true);
 
                 // Limpiar carrito
                 clearCart();
@@ -243,121 +258,121 @@ export default function Checkout() {
                     </div>
                 </div>
 
-                <h1 className="text-3xl font-bold mb-6 text-center">Finalizar Compra</h1>
+                <h1 className={`${text.pageTitle} text-center`}>Finalizar Compra</h1>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Formulario */}
                     <div className="lg:col-span-2">
-                        <Card>
+                        <Card variant="bordered">
                             {/* PASO 1: Datos de envío */}
                             {currentStep === 1 && (
                                 <div className="space-y-4">
-                                    <h2 className="text-xl font-semibold mb-4">Datos de Envío</h2>
+                                    <h2 className={text.sectionTitle}>Datos de Envío</h2>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium mb-1">Nombre Completo *</label>
+                                        <div className={inputs.group}>
+                                            <label className={inputs.label}>Nombre Completo *</label>
                                             <input
                                                 type="text"
                                                 name="customerName"
                                                 value={formData.customerName}
                                                 onChange={handleChange}
-                                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                className={inputs.text}
                                                 required
                                             />
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-medium mb-1">Teléfono *</label>
+                                        <div className={inputs.group}>
+                                            <label className={inputs.label}>Teléfono *</label>
                                             <input
                                                 type="tel"
                                                 name="customerPhone"
                                                 value={formData.customerPhone}
                                                 onChange={handleChange}
                                                 placeholder="11-1234-5678"
-                                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                className={inputs.text}
                                                 required
                                             />
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1">Email *</label>
+                                    <div className={inputs.group}>
+                                        <label className={inputs.label}>Email *</label>
                                         <input
                                             type="email"
                                             name="email"
                                             value={formData.email}
                                             onChange={handleChange}
-                                            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                            className={inputs.text}
                                             required
                                         />
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1">Dirección *</label>
+                                    <div className={inputs.group}>
+                                        <label className={inputs.label}>Dirección *</label>
                                         <input
                                             type="text"
                                             name="shippingAddress"
                                             value={formData.shippingAddress}
                                             onChange={handleChange}
                                             placeholder="Calle, número, piso, depto"
-                                            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                            className={inputs.text}
                                             required
                                         />
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium mb-1">Barrio (opcional)</label>
+                                        <div className={inputs.group}>
+                                            <label className={inputs.label}>Barrio (opcional)</label>
                                             <input
                                                 type="text"
                                                 name="shippingNeighborhood"
                                                 value={formData.shippingNeighborhood}
                                                 onChange={handleChange}
                                                 placeholder="Ej: Palermo, Recoleta"
-                                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                className={inputs.text}
                                             />
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-medium mb-1">Código Postal *</label>
+                                        <div className={inputs.group}>
+                                            <label className={inputs.label}>Código Postal *</label>
                                             <input
                                                 type="text"
                                                 name="shippingPostalCode"
                                                 value={formData.shippingPostalCode}
                                                 onChange={handleChange}
                                                 placeholder="1234"
-                                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                className={inputs.text}
                                                 required
                                             />
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium mb-1">Ciudad *</label>
+                                        <div className={inputs.group}>
+                                            <label className={inputs.label}>Ciudad *</label>
                                             <input
                                                 type="text"
                                                 name="shippingCity"
                                                 value={formData.shippingCity}
                                                 onChange={handleChange}
-                                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                className={inputs.text}
                                                 required
                                             />
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-medium mb-1">Provincia *</label>
+                                        <div className={inputs.group}>
+                                            <label className={inputs.label}>Provincia *</label>
                                             <input
                                                 type="text"
                                                 name="shippingState"
                                                 value={formData.shippingState}
                                                 onChange={handleChange}
-                                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                className={inputs.text}
                                                 required
                                             />
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1">Código Postal (para calcular envío) *</label>
+                                    <div className={inputs.group}>
+                                        <label className={inputs.label}>Código Postal (para calcular envío) *</label>
                                         <div className="flex gap-2">
                                             <div className="flex gap-2">
                                                 <input
@@ -366,7 +381,7 @@ export default function Checkout() {
                                                     value={formData.shippingPostalCode}
                                                     onChange={handleChange}
                                                     placeholder="1234"
-                                                    className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className={`${inputs.text} flex-1`}
                                                     required
                                                 />
                                                 <Button
@@ -551,25 +566,24 @@ export default function Checkout() {
 
                     {/* Resumen del pedido */}
                     <div className="lg:col-span-1">
-                        <Card>
-                            <h3 className="text-lg font-semibold mb-4">Resumen del Pedido</h3>
+                        <Card variant="bordered">
+                            <h3 className={text.sectionTitle}>Resumen del Pedido</h3>
 
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span>Subtotal ({cart.items?.length} items)</span>
-                                    <span>${calculateSubtotal().toFixed(2)}</span>
+                            <div className={orderSummary.container}>
+                                <div className={orderSummary.row}>
+                                    <span className={orderSummary.label}>Subtotal ({cart.items?.length} items)</span>
+                                    <span className={orderSummary.value}>${calculateSubtotal().toFixed(2)}</span>
                                 </div>
 
-                                <div className="flex justify-between">
-                                    <span>Envío</span>
-                                    <span>${(parseFloat(formData.shippingCost) || 0).toFixed(2)}</span>
+                                <div className={orderSummary.row}>
+                                    <span className={orderSummary.label}>Envío</span>
+                                    <span className={orderSummary.value}>${(parseFloat(formData.shippingCost) || 0).toFixed(2)}</span>
                                 </div>
 
-                                <div className="border-t pt-2 mt-2">
-                                    <div className="flex justify-between font-bold text-lg">
-                                        <span>Total</span>
-                                        <span>${calculateTotal().toFixed(2)}</span>
-                                    </div>
+                                <div className={orderSummary.divider}></div>
+                                <div className={orderSummary.totalRow}>
+                                    <span className={orderSummary.totalLabel}>Total</span>
+                                    <span className={orderSummary.totalValue}>${calculateTotal().toFixed(2)}</span>
                                 </div>
                             </div>
                         </Card>

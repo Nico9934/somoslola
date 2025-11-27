@@ -1,3 +1,5 @@
+import { inputs, alerts } from '../../styles';
+
 export default function Input({
     label,
     error,
@@ -5,19 +7,20 @@ export default function Input({
     ...props
 }) {
     return (
-        <div className="w-full">
+        <div className={inputs.group}>
             {label && (
-                <label className="block text-sm font-medium text-primary mb-1">
+                <label className={inputs.label}>
                     {label}
                 </label>
             )}
             <input
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary ${error ? 'border-red-500' : 'border-gray-300'
-                    } ${className}`}
+                className={`${error ? inputs.error : inputs.text} ${className}`}
                 {...props}
             />
             {error && (
-                <p className="mt-1 text-sm text-red-500">{error}</p>
+                <div className="mt-1">
+                    <p className={alerts.errorText}>{error}</p>
+                </div>
             )}
         </div>
     );

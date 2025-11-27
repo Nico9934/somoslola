@@ -4,6 +4,7 @@ import { ordersService } from '../../api/orders';
 import Layout from '../../components/ui/Layout';
 import Card from '../../components/ui/Card';
 import Spinner from '../../components/ui/Spinner';
+import { text, badges, layout, buttons } from '../../styles';
 
 export default function Orders() {
     const [orders, setOrders] = useState([]);
@@ -26,11 +27,11 @@ export default function Orders() {
     };
 
     const statusColors = {
-        PENDING: 'bg-yellow-100 text-yellow-800',
-        PAID: 'bg-blue-100 text-blue-800',
-        SHIPPED: 'bg-purple-100 text-purple-800',
-        COMPLETED: 'bg-green-100 text-green-800',
-        CANCELLED: 'bg-red-100 text-red-800',
+        PENDING: badges.warning,
+        PAID: badges.info,
+        SHIPPED: badges.info,
+        COMPLETED: badges.success,
+        CANCELLED: badges.error,
     };
 
     const statusLabels = {
@@ -53,27 +54,27 @@ export default function Orders() {
 
     return (
         <Layout>
-            <div className="max-w-7xl mx-auto px-4 py-8">
-                <h1 className="text-3xl font-bold text-primary mb-6">Mis Pedidos</h1>
+            <div className={layout.container}>
+                <h1 className={text.pageTitle}>Mis Pedidos</h1>
 
                 {orders.length === 0 ? (
-                    <Card>
-                        <p className="text-center text-muted">No tienes pedidos aún</p>
+                    <Card variant="bordered">
+                        <p className={`${text.muted} text-center`}>No tienes pedidos aún</p>
                     </Card>
                 ) : (
                     <div className="space-y-4">
                         {orders.map((order) => (
-                            <Card key={order.id}>
+                            <Card key={order.id} variant="bordered">
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
-                                        <h3 className="font-semibold text-primary">
+                                        <h3 className={text.label}>
                                             Pedido #{order.id}
                                         </h3>
-                                        <p className="text-sm text-muted">
+                                        <p className={text.muted}>
                                             {new Date(order.createdAt).toLocaleDateString('es-AR')}
                                         </p>
                                     </div>
-                                    <span className={`px-3 py-1 rounded-full text-sm ${statusColors[order.status]}`}>
+                                    <span className={statusColors[order.status]}>
                                         {statusLabels[order.status]}
                                     </span>
                                 </div>
@@ -81,7 +82,7 @@ export default function Orders() {
                                 <div className="space-y-2 mb-4">
                                     {order.items?.map((item) => (
                                         <div key={item.id} className="flex justify-between text-sm">
-                                            <span className="text-muted">
+                                            <span className={text.muted}>
                                                 {item.productName} ({item.variantSku}) x{item.quantity}
                                             </span>
                                             <span>${(item.price * item.quantity).toLocaleString()}</span>
@@ -91,13 +92,13 @@ export default function Orders() {
 
                                 <div className="border-t pt-2 flex justify-between font-bold">
                                     <span>Total:</span>
-                                    <span className="text-secondary">${order.total.toLocaleString()}</span>
+                                    <span className={text.value}>${order.total.toLocaleString()}</span>
                                 </div>
 
                                 <div className="mt-4 flex gap-2">
                                     <button
                                         onClick={() => navigate(`/order-confirmation/${order.id}`)}
-                                        className="flex-1 px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 transition"
+                                        className={`${buttons.primary} flex-1`}
                                     >
                                         Ver detalles
                                     </button>
@@ -105,7 +106,7 @@ export default function Orders() {
                                     {order.paymentMethod === 'TRANSFER' && order.status === 'PENDING' && !order.paymentProof && (
                                         <button
                                             onClick={() => navigate(`/order-confirmation/${order.id}`)}
-                                            className="flex-1 px-4 py-2 bg-secondary text-white rounded hover:bg-opacity-90 transition"
+                                            className={`${buttons.secondary} flex-1`}
                                         >
                                             📄 Subir comprobante
                                         </button>

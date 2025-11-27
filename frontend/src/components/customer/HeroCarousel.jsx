@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { text, buttons } from '../../styles';
 
 export default function HeroCarousel({ banners }) {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -93,7 +94,7 @@ export default function HeroCarousel({ banners }) {
                         {currentBanner.link && (
                             <a
                                 href={currentBanner.link}
-                                className="inline-flex items-center px-8 py-4 bg-white text-black font-bold text-lg rounded-full hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-xl"
+                                className={`${buttons.primary} inline-flex items-center rounded-full hover:scale-105 shadow-xl`}
                             >
                                 Explorar Ahora
                                 <ChevronRight className="ml-2 w-5 h-5" />

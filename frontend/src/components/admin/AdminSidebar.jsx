@@ -19,6 +19,7 @@ import {
     CreditCard
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
+import { text } from '../../styles';
 
 const navigation = [
     { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -115,8 +116,8 @@ export default function AdminSidebar({ variant = 'desktop' }) {
                         </div>
                         {isExpanded && (
                             <div>
-                                <h1 className="text-lg font-bold">SOMOSLOLA</h1>
-                                <p className="text-xs text-gray-300">Panel Admin</p>
+                                <h1 className={`text-lg ${text.label} text-white`}>SOMOSLOLA</h1>
+                                <p className={`${text.muted} text-gray-300`}>Panel Admin</p>
                             </div>
                         )}
                     </div>
@@ -177,8 +178,8 @@ export default function AdminSidebar({ variant = 'desktop' }) {
                         <User className="h-4 w-4 text-gray-300 flex-shrink-0" />
                         {isExpanded && (
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate">{user?.email}</p>
-                                <p className="text-xs text-gray-400">Administrador</p>
+                                <p className={`${text.label} text-white truncate`}>{user?.email}</p>
+                                <p className={`${text.muted} text-gray-400`}>Administrador</p>
                             </div>
                         )}
                     </div>
@@ -198,7 +199,7 @@ export default function AdminSidebar({ variant = 'desktop' }) {
 
                     {/* Version */}
                     {isExpanded && (
-                        <p className="text-xs text-gray-400 text-center pt-2">
+                        <p className={`${text.muted} text-gray-400 text-center pt-2`}>
                             v1.0.0
                         </p>
                     )}
