@@ -215,7 +215,7 @@ async function main() {
         create: {
             email: "prueba1@test.com",
             password: await bcrypt.hash("prueba1", 10),
-            role: "USER",
+            role: "CUSTOMER",
         },
     });
 
@@ -226,7 +226,7 @@ async function main() {
         create: {
             email: "prueba2@test.com",
             password: await bcrypt.hash("prueba2", 10),
-            role: "USER",
+            role: "CUSTOMER",
         },
     });
 
@@ -237,7 +237,7 @@ async function main() {
         create: {
             email: "prueba3@test.com",
             password: await bcrypt.hash("prueba3", 10),
-            role: "USER",
+            role: "CUSTOMER",
         },
     });
 
@@ -248,7 +248,7 @@ async function main() {
         create: {
             email: "prueba4@test.com",
             password: await bcrypt.hash("prueba4", 10),
-            role: "USER",
+            role: "CUSTOMER",
         },
     });
 
