@@ -332,7 +332,7 @@ export default function ProductsManagement() {
                                     </div>
                                 </div>
                             </Card>
-                        ))}}
+                        ))}
                     </div>
                 </AdminPageLayout>
             </div>
