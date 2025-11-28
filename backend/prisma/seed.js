@@ -275,7 +275,7 @@ async function main() {
     console.log("🛍️ Creando productos...");
 
     // Función helper para crear productos más rápido
-    async function seedProduct({ name, description, basePrice, category, variants }) {
+    async function seedProduct({ name, description, category, variants }) {
         // Buscar si ya existe un producto con este nombre
         const existing = await prisma.product.findFirst({
             where: { name },
@@ -291,21 +291,31 @@ async function main() {
             data: {
                 name,
                 description,
-                basePrice,
                 category: { connect: { name: category } },
             },
         });
 
         // Crear variantes
         for (const v of variants) {
-            await prisma.productVariant.upsert({
+            const variant = await prisma.productVariant.upsert({
                 where: { sku: v.sku },
                 update: {},
                 create: {
                     sku: v.sku,
-                    stock: v.stock,
+                    salePrice: v.salePrice,
                     cost: v.cost,
                     productId: product.id,
+                },
+            });
+
+            // Crear stock para la variante
+            await prisma.stock.upsert({
+                where: { variantId: variant.id },
+                update: { quantity: v.stock },
+                create: {
+                    variantId: variant.id,
+                    quantity: v.stock,
+                    lowStockAlert: 5,
                 },
             });
         }
@@ -317,79 +327,72 @@ async function main() {
     await seedProduct({
         name: "Remera Oversize Básica",
         description: "Remera de algodón premium corte oversize.",
-        basePrice: 9990,
         category: "Remeras",
         variants: [
-            { sku: "REM-OVS-BLK-S", stock: 10, cost: 5000 },
-            { sku: "REM-OVS-BLK-M", stock: 12, cost: 5000 },
-            { sku: "REM-OVS-BLK-L", stock: 8, cost: 5000 },
+            { sku: "REM-OVS-BLK-S", salePrice: 9990, cost: 5000, stock: 10 },
+            { sku: "REM-OVS-BLK-M", salePrice: 9990, cost: 5000, stock: 12 },
+            { sku: "REM-OVS-BLK-L", salePrice: 9990, cost: 5000, stock: 8 },
         ],
     });
 
     await seedProduct({
         name: "Remera Estampada Street",
         description: "Estampa full print, edición limitada.",
-        basePrice: 11990,
         category: "Remeras",
         variants: [
-            { sku: "REM-STP-WHT-M", stock: 20, cost: 5500 },
-            { sku: "REM-STP-WHT-L", stock: 15, cost: 5500 },
+            { sku: "REM-STP-WHT-M", salePrice: 11990, cost: 5500, stock: 20 },
+            { sku: "REM-STP-WHT-L", salePrice: 11990, cost: 5500, stock: 15 },
         ],
     });
 
     await seedProduct({
         name: "Pantalón Cargo Urban",
         description: "Relaxed fit con múltiples bolsillos.",
-        basePrice: 15990,
         category: "Pantalones",
         variants: [
-            { sku: "PNT-CRG-GRN-S", stock: 5, cost: 9000 },
-            { sku: "PNT-CRG-GRN-M", stock: 7, cost: 9000 },
-            { sku: "PNT-CRG-GRN-L", stock: 6, cost: 9000 },
+            { sku: "PNT-CRG-GRN-S", salePrice: 15990, cost: 9000, stock: 5 },
+            { sku: "PNT-CRG-GRN-M", salePrice: 15990, cost: 9000, stock: 7 },
+            { sku: "PNT-CRG-GRN-L", salePrice: 15990, cost: 9000, stock: 6 },
         ],
     });
 
     await seedProduct({
         name: "Jogger Frisa Premium",
         description: "Jogger de frisa con puños elastizados.",
-        basePrice: 13990,
         category: "Pantalones",
         variants: [
-            { sku: "PNT-JGR-GRY-M", stock: 14, cost: 8000 },
-            { sku: "PNT-JGR-GRY-L", stock: 10, cost: 8000 },
+            { sku: "PNT-JGR-GRY-M", salePrice: 13990, cost: 8000, stock: 14 },
+            { sku: "PNT-JGR-GRY-L", salePrice: 13990, cost: 8000, stock: 10 },
         ],
     });
 
     await seedProduct({
         name: "Campera Rompeviento Nylon",
         description: "Liviana e impermeable para media estación.",
-        basePrice: 19990,
         category: "Camperas",
         variants: [
-            { sku: "CMP-RMT-BLU-S", stock: 4, cost: 11000 },
-            { sku: "CMP-RMT-BLU-M", stock: 6, cost: 11000 },
+            { sku: "CMP-RMT-BLU-S", salePrice: 19990, cost: 11000, stock: 4 },
+            { sku: "CMP-RMT-BLU-M", salePrice: 19990, cost: 11000, stock: 6 },
         ],
     });
 
     await seedProduct({
         name: "Buzo Hoodie Clásico",
         description: "Buzo canguro frisa alta calidad.",
-        basePrice: 17990,
         category: "Buzos",
         variants: [
-            { sku: "BUZ-HOD-BLK-M", stock: 10, cost: 9000 },
-            { sku: "BUZ-HOD-BLK-L", stock: 8, cost: 9000 },
+            { sku: "BUZ-HOD-BLK-M", salePrice: 17990, cost: 9000, stock: 10 },
+            { sku: "BUZ-HOD-BLK-L", salePrice: 17990, cost: 9000, stock: 8 },
         ],
     });
 
     await seedProduct({
         name: "Gorra Snapback Logo",
         description: "Gorra estilo urbano con logo bordado.",
-        basePrice: 7990,
         category: "Accesorios",
         variants: [
-            { sku: "ACC-HAT-BLK", stock: 25, cost: 3000 },
-            { sku: "ACC-HAT-RED", stock: 15, cost: 3000 },
+            { sku: "ACC-HAT-BLK", salePrice: 7990, cost: 3000, stock: 25 },
+            { sku: "ACC-HAT-RED", salePrice: 7990, cost: 3000, stock: 15 },
         ],
     });
 
