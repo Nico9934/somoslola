@@ -1,4 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { buttons, text } from '../../styles';
@@ -7,13 +9,16 @@ export default function Navbar() {
     const { user, logout, isAdmin } = useAuth();
     const { itemsCount } = useCart();
     const navigate = useNavigate();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const handleLogout = () => {
         logout();
         navigate('/login');
+        setIsMobileMenuOpen(false);
     };
 
     const linkClass = "text-gray-700 hover:text-black transition-colors";
+    const mobileLinkClass = "block py-2 text-gray-700 hover:bg-gray-50 px-4 rounded transition-colors";
 
     return (
         <nav className="bg-white/95 backdrop-blur-sm shadow-lg border-b border-gray-300">
@@ -33,7 +38,8 @@ export default function Navbar() {
                         </h1>
                     </div>
 
-                    <div className="flex items-center space-x-4">
+                    {/* Desktop Navigation */}
+                    <div className="hidden md:flex items-center space-x-4">
                         {/* Carrito - SIEMPRE visible */}
                         <Link to="/cart" className="relative text-gray-700 hover:text-black transition">
                             🛒
@@ -96,8 +102,147 @@ export default function Navbar() {
                             </>
                         )}
                     </div>
+
+                    {/* Mobile Menu Button & Cart */}
+                    <div className="flex md:hidden items-center gap-3">
+                        {/* Carrito - SIEMPRE visible en mobile */}
+                        <Link to="/cart" className="relative text-gray-700 hover:text-black transition">
+                            🛒
+                            {itemsCount > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                                    {itemsCount}
+                                </span>
+                            )}
+                        </Link>
+
+                        <button
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            className="text-gray-700 hover:text-black transition-colors"
+                        >
+                            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            {/* Mobile Menu Drawer */}
+            {isMobileMenuOpen && (
+                <>
+                    {/* Backdrop */}
+                    <div
+                        className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                    />
+
+                    {/* Menu Drawer */}
+                    <div className="fixed right-0 top-0 h-full w-64 bg-white shadow-2xl z-50 md:hidden overflow-y-auto">
+                        <div className="p-4">
+                            {/* Close button */}
+                            <div className="flex justify-end mb-4">
+                                <button
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="text-gray-700 hover:text-black transition-colors"
+                                >
+                                    <X size={24} />
+                                </button>
+                            </div>
+
+                            {/* User info */}
+                            {user && (
+                                <div className="mb-4 pb-4 border-b border-gray-200">
+                                    <p className="text-sm text-gray-600 font-medium">
+                                        {user.email}
+                                    </p>
+                                    {isAdmin && (
+                                        <p className="text-xs text-blue-600 mt-1">Admin</p>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Navigation Links */}
+                            <nav className="space-y-2">
+                                {user ? (
+                                    <>
+                                        {isAdmin ? (
+                                            <>
+                                                <Link
+                                                    to="/admin"
+                                                    className={mobileLinkClass}
+                                                    onClick={() => setIsMobileMenuOpen(false)}
+                                                >
+                                                    Dashboard
+                                                </Link>
+                                                <Link
+                                                    to="/admin/products"
+                                                    className={mobileLinkClass}
+                                                    onClick={() => setIsMobileMenuOpen(false)}
+                                                >
+                                                    Productos
+                                                </Link>
+                                                <Link
+                                                    to="/admin/categories"
+                                                    className={mobileLinkClass}
+                                                    onClick={() => setIsMobileMenuOpen(false)}
+                                                >
+                                                    Categorías
+                                                </Link>
+                                                <Link
+                                                    to="/admin/orders"
+                                                    className={mobileLinkClass}
+                                                    onClick={() => setIsMobileMenuOpen(false)}
+                                                >
+                                                    Pedidos
+                                                </Link>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Link
+                                                    to="/products"
+                                                    className={mobileLinkClass}
+                                                    onClick={() => setIsMobileMenuOpen(false)}
+                                                >
+                                                    Productos
+                                                </Link>
+                                                <Link
+                                                    to="/orders"
+                                                    className={mobileLinkClass}
+                                                    onClick={() => setIsMobileMenuOpen(false)}
+                                                >
+                                                    Mis Pedidos
+                                                </Link>
+                                            </>
+                                        )}
+
+                                        <button
+                                            onClick={handleLogout}
+                                            className="w-full text-left py-2 px-4 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                        >
+                                            Salir
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Link
+                                            to="/products"
+                                            className={mobileLinkClass}
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                        >
+                                            Productos
+                                        </Link>
+                                        <Link
+                                            to="/login"
+                                            className={mobileLinkClass}
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                        >
+                                            Ingresar
+                                        </Link>
+                                    </>
+                                )}
+                            </nav>
+                        </div>
+                    </div>
+                </>
+            )}
         </nav>
     );
 }

@@ -45,33 +45,33 @@ export default function PriceDisplay({
                 )}
             </div>
 
-            {/* Precio Transferencia (20% off) */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+            {/* Precio Transferencia (20% off) - Minimalista */}
+            <div className="border border-gray-200 rounded-lg p-3 bg-gray-50/50">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-sm text-green-700 font-medium">
+                        <p className="text-sm text-gray-700 font-medium">
                             💳 Precio transferencia ({paymentOptions.transferDiscount}% OFF)
                         </p>
-                        <p className="text-2xl font-bold text-green-600">
+                        <p className="text-2xl font-bold text-gray-900 mt-1">
                             ${transferPrice.toLocaleString('es-AR')}
                         </p>
                     </div>
-                    <div className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                    <div className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
                         Ahorrás ${(basePrice - transferPrice).toLocaleString('es-AR')}
                     </div>
                 </div>
             </div>
 
-            {/* Cuotas sin interés */}
+            {/* Cuotas sin interés - Minimalista */}
             {showInstallments && paymentOptions.installmentsActive && installmentPrice && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-sm text-blue-700 font-medium mb-1">
+                <div className="border border-gray-200 rounded-lg p-3 bg-gray-50/50">
+                    <p className="text-sm text-gray-700 font-medium mb-1">
                         💰 {paymentOptions.installments} cuotas sin interés
                     </p>
-                    <p className="text-xl font-bold text-blue-600">
+                    <p className="text-xl font-bold text-gray-900">
                         {paymentOptions.installments} x ${installmentPrice.toLocaleString('es-AR')}
                     </p>
-                    <p className="text-xs text-blue-600 mt-1">
+                    <p className="text-xs text-gray-600 mt-1">
                         Total: ${(installmentPrice * paymentOptions.installments).toLocaleString('es-AR')}
                     </p>
                 </div>
