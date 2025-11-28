@@ -41,8 +41,8 @@ export default function Layout({ children }) {
                 <Navbar />
             </div>
 
-            {/* Espaciador para compensar el navbar fijo */}
-            <div className="h-[120px]"></div>
+            {/* Espaciador para compensar el navbar fijo - Aumentado para mejor separación */}
+            <div className="h-[128px]"></div>
 
             {children}
         </div>
