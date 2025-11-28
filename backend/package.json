@@ -6,7 +6,8 @@
     "dev": "nodemon src/index.js",
     "start": "npx prisma migrate deploy && node prisma/seed.js && node src/index.js",
     "prisma:migrate": "npx prisma migrate deploy",
-    "prisma:seed": "node prisma/seed.js"
+    "prisma:seed": "node prisma/seed.js",
+    "prisma:seed:reset": "node prisma/seed.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

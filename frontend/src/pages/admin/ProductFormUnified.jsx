@@ -119,6 +119,9 @@ export default function ProductFormUnified() {
     // 📦 Variantes del producto (generadas o existentes)
     const [variants, setVariants] = useState([]);
 
+    // 🎨 Estado para dropdowns de atributos
+    const [openDropdowns, setOpenDropdowns] = useState({});
+
     // ============================================================================
     // 🛠️ FUNCIONES HELPER
     // ============================================================================
@@ -170,7 +173,6 @@ export default function ProductFormUnified() {
 
                 // 2.2 Cargar variantes existentes
                 if (product.variants && product.variants.length > 0) {
-                    console.log('📦 Variantes existentes:', product.variants.length);
                     const existingVariants = product.variants.map(v => {
                         console.log('  - SKU:', v.sku, '| Precio:', v.salePrice, '| Stock:', v.stock?.quantity, '| Imágenes:', v.images?.length || 0);
 
@@ -204,7 +206,6 @@ export default function ProductFormUnified() {
 
                     // NO preseleccionar atributos en modo edición
                     // Esto evita que al generar variantes se dupliquen las existentes
-                    console.log('✅ Variantes cargadas sin preseleccionar atributos');
                 }
             } else {
                 console.log('\n➕ Modo CREACIÓN - Formulario vacío');
@@ -230,7 +231,6 @@ export default function ProductFormUnified() {
      * Ejemplo: toggleAttributeValue(1, 5) → Color: Rojo
      */
     const toggleAttributeValue = (attributeId, valueId) => {
-        console.log(`\n🔄 Toggle valor - Atributo: ${attributeId}, Valor: ${valueId}`);
         setSelectedValues(prev => {
             const current = prev[attributeId] || [];
             if (current.includes(valueId)) {
@@ -602,7 +602,7 @@ export default function ProductFormUnified() {
     if (loading) {
         return (
             <AdminLayout>
-                <div className="max-w-7xl mx-auto p-6">
+                <div className="w-full px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto overflow-x-hidden">
                     {/* Header Skeleton */}
                     <div className="mb-6 flex items-center justify-between">
                         <div className="h-9 w-64 bg-gray-200 animate-pulse rounded"></div>
@@ -647,7 +647,7 @@ export default function ProductFormUnified() {
 
     return (
         <AdminLayout>
-            <div className="max-w-7xl mx-auto p-6">
+            <div className="w-full px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto overflow-x-hidden">
                 {/* Header */}
                 <div className="mb-6 flex items-center justify-between">
                     <h1 className="text-3xl font-bold text-primary">
@@ -662,128 +662,170 @@ export default function ProductFormUnified() {
                 <div className="space-y-6">
                     {/* ========== SECCIÓN 1: DATOS BÁSICOS ========== */}
                     <Card>
-                        <h2 className="text-lg font-medium text-gray-900 mb-4">
+                        <h2 className="text-lg font-semibold text-gray-900 mb-6">
                             Información del Producto
                         </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <div className="space-y-5">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1.5">
                                     Nombre del Producto *
                                 </label>
                                 <input
                                     type="text"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     required
                                     placeholder="ej: Remera Oversize Premium"
                                 />
                             </div>
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1.5">
                                     Descripción
                                 </label>
                                 <textarea
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors resize-none"
                                     rows="3"
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     placeholder="Describe las características del producto..."
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Categoría *
-                                </label>
-                                <select
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    value={formData.categoryId}
-                                    onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                                    required
-                                >
-                                    <option value="">Selecciona una categoría</option>
-                                    {categories.map(cat => (
-                                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Marca (opcional)
-                                </label>
-                                <select
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    value={formData.brandId}
-                                    onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}
-                                >
-                                    <option value="">Sin marca</option>
-                                    {brands.map(brand => (
-                                        <option key={brand.id} value={brand.id}>{brand.name}</option>
-                                    ))}
-                                </select>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                                        Categoría *
+                                    </label>
+                                    <select
+                                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors bg-white"
+                                        value={formData.categoryId}
+                                        onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                                        required
+                                    >
+                                        <option value="">Selecciona una categoría</option>
+                                        {categories.map(cat => (
+                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                                        Marca (opcional)
+                                    </label>
+                                    <select
+                                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors bg-white"
+                                        value={formData.brandId}
+                                        onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}
+                                    >
+                                        <option value="">Sin marca</option>
+                                        {brands.map(brand => (
+                                            <option key={brand.id} value={brand.id}>{brand.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </Card>
 
                     {/* ========== SECCIÓN 2: ATRIBUTOS Y VARIANTES ========== */}
                     <Card>
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-semibold text-primary flex items-center gap-2">
-                                🎯 Atributos del Producto
-                            </h2>
-                            <Button
-                                onClick={handleGenerateVariants}
-                            >
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-900">Atributos del Producto</h2>
+                                <p className="text-sm text-gray-500 mt-1">Selecciona los atributos para generar variantes</p>
+                            </div>
+                            <Button onClick={handleGenerateVariants} size="sm">
                                 Generar Variantes
                             </Button>
-                        </div>                            {/* Lista de atributos con sus valores */}
-                        <div className="space-y-4">
+                        </div>
+
+                        {/* Atributos en grid de dropdowns minimalistas */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {attributes.map(attr => {
                                 const selectedVals = selectedValues[attr.id] || [];
-                                const hasSelection = selectedVals.length > 0;
+                                const isColorAttr = attr.values?.some(v => v.hexColor);
+                                const isOpen = openDropdowns[attr.id] || false;
 
                                 return (
-                                    <div key={attr.id} className="border rounded-lg p-4">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <h3 className="text-lg font-semibold text-primary">
-                                                {attr.name}
-                                            </h3>
-                                            {hasSelection && (
-                                                <span className="text-sm font-semibold text-secondary">
-                                                    {selectedVals.length} seleccionado(s)
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {attr.values?.map(val => {
-                                                const isSelected = selectedVals.includes(val.id);
-                                                // Si tiene hexColor, es un atributo de color - mostrar solo círculo
-                                                const isColorAttribute = !!val.hexColor;
+                                    <div key={attr.id} className="relative">
+                                        <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                                            {attr.name}
+                                        </label>
 
-                                                return (
-                                                    <button
-                                                        key={val.id}
-                                                        type="button"
-                                                        onClick={() => toggleAttributeValue(attr.id, val.id)}
-                                                        className={`${isColorAttribute
-                                                            ? 'w-10 h-10 rounded-full border-4 transition-all hover:scale-110'
-                                                            : 'px-4 py-2 rounded-lg border-2 transition-all flex items-center gap-2'
-                                                            } ${isSelected
-                                                                ? isColorAttribute
-                                                                    ? 'border-secondary ring-2 ring-secondary/30 scale-110'
-                                                                    : 'border-secondary bg-secondary text-white font-semibold'
-                                                                : isColorAttribute
-                                                                    ? 'border-gray-300 hover:border-secondary/50'
-                                                                    : 'border-gray-300 bg-white text-gray-700 hover:border-secondary/50'
-                                                            }`}
-                                                        style={isColorAttribute ? { backgroundColor: val.hexColor } : {}}
-                                                        title={val.value}
-                                                    >
-                                                        {!isColorAttribute && val.value}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
+                                        {/* Dropdown button */}
+                                        <button
+                                            type="button"
+                                            onClick={() => setOpenDropdowns(prev => ({ ...prev, [attr.id]: !isOpen }))}
+                                            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-left text-sm hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors flex items-center justify-between"
+                                        >
+                                            <span className={selectedVals.length === 0 ? 'text-gray-400' : 'text-gray-900'}>
+                                                {selectedVals.length === 0
+                                                    ? `Seleccionar ${attr.name.toLowerCase()}`
+                                                    : `${selectedVals.length} seleccionado${selectedVals.length > 1 ? 's' : ''}`
+                                                }
+                                            </span>
+                                            <svg className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+
+                                        {/* Dropdown menu */}
+                                        {isOpen && (
+                                            <>
+                                                {/* Backdrop para cerrar */}
+                                                <div className="fixed inset-0 z-10" onClick={() => setOpenDropdowns(prev => ({ ...prev, [attr.id]: false }))} />
+
+                                                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+                                                    {isColorAttr ? (
+                                                        /* Colores con círculo + nombre */
+                                                        <div className="p-2 space-y-1">
+                                                            {attr.values?.map(val => {
+                                                                const isSelected = selectedVals.includes(val.id);
+                                                                return (
+                                                                    <label
+                                                                        key={val.id}
+                                                                        className="flex items-center gap-3 px-2 py-2 rounded hover:bg-gray-50 cursor-pointer group"
+                                                                    >
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={isSelected}
+                                                                            onChange={() => toggleAttributeValue(attr.id, val.id)}
+                                                                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500/20"
+                                                                        />
+                                                                        <div
+                                                                            className="w-5 h-5 rounded-full border-2 border-gray-200 group-hover:border-gray-300"
+                                                                            style={{ backgroundColor: val.hexColor }}
+                                                                        />
+                                                                        <span className="text-sm text-gray-700">{val.value}</span>
+                                                                    </label>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    ) : (
+                                                        /* Otros atributos: solo checkbox + texto */
+                                                        <div className="p-2 space-y-1">
+                                                            {attr.values?.map(val => {
+                                                                const isSelected = selectedVals.includes(val.id);
+                                                                return (
+                                                                    <label
+                                                                        key={val.id}
+                                                                        className="flex items-center gap-3 px-2 py-2 rounded hover:bg-gray-50 cursor-pointer"
+                                                                    >
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={isSelected}
+                                                                            onChange={() => toggleAttributeValue(attr.id, val.id)}
+                                                                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500/20"
+                                                                        />
+                                                                        <span className="text-sm text-gray-700">{val.value}</span>
+                                                                    </label>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 );
                             })}
@@ -812,30 +854,205 @@ export default function ProductFormUnified() {
                                 </Button>
                             </div>
 
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
+                            {/* MOBILE: Cards apiladas */}
+                            <div className="md:hidden space-y-4">
+                                {variants.map((variant, index) => {
+                                    const sale = parseFloat(variant.salePrice);
+                                    const cost = parseFloat(variant.cost);
+                                    const margin = (sale && cost) ? (((sale - cost) / cost) * 100).toFixed(1) : '-';
+
+                                    return (
+                                        <div key={index} className="bg-gray-50 rounded-lg p-4 space-y-3 border border-gray-200">
+                                            {/* Header con combinación y botón eliminar */}
+                                            <div className="flex items-start justify-between gap-2 pb-2 border-b border-gray-200">
+                                                <div className="flex-1">
+                                                    {variant.combination && variant.combination.length > 0 && (
+                                                        <div className="flex flex-wrap gap-2 mb-2">
+                                                            {variant.combination.map((combo, i) => {
+                                                                if (combo.hexColor) {
+                                                                    return (
+                                                                        <span
+                                                                            key={i}
+                                                                            className="inline-block w-8 h-8 rounded-full border-2 border-gray-300 shadow-sm"
+                                                                            style={{ backgroundColor: combo.hexColor }}
+                                                                            title={combo.valueName}
+                                                                        ></span>
+                                                                    );
+                                                                }
+                                                                return (
+                                                                    <span key={i} className="text-xs bg-secondary/10 text-secondary px-2 py-1 rounded font-medium">
+                                                                        {combo.valueName}
+                                                                    </span>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {!isEditing && (
+                                                    <Button
+                                                        variant="danger"
+                                                        size="sm"
+                                                        onClick={() => removeVariant(index)}
+                                                        disabled={variant.isExisting || variants.length === 1}
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
+
+                                            {/* Inputs en grid 2 columnas */}
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-700 mb-1">SKU *</label>
+                                                    <input
+                                                        type="text"
+                                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-secondary"
+                                                        value={variant.sku}
+                                                        onChange={(e) => updateVariant(index, 'sku', e.target.value)}
+                                                        required
+                                                        placeholder="SKU-001"
+                                                        disabled={variant.isExisting}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-700 mb-1">Stock</label>
+                                                    <input
+                                                        type="number"
+                                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-secondary"
+                                                        value={variant.stock}
+                                                        onChange={(e) => updateVariant(index, 'stock', e.target.value)}
+                                                        min="0"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-700 mb-1">Precio Venta *</label>
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0"
+                                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-secondary"
+                                                        value={variant.salePrice}
+                                                        onChange={(e) => updateVariant(index, 'salePrice', e.target.value)}
+                                                        placeholder="0.00"
+                                                        required
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-700 mb-1">P. Promoción</label>
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0"
+                                                        className={`w-full px-3 py-2 text-sm border rounded focus:outline-none focus:ring-2 ${variant.promotionPrice && parseFloat(variant.promotionPrice) >= parseFloat(variant.salePrice)
+                                                            ? 'border-red-500 focus:ring-red-500 bg-red-50'
+                                                            : 'border-gray-300 focus:ring-secondary'
+                                                            }`}
+                                                        value={variant.promotionPrice}
+                                                        onChange={(e) => updateVariant(index, 'promotionPrice', e.target.value)}
+                                                        placeholder="Opcional"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-700 mb-1">Costo</label>
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0"
+                                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-secondary"
+                                                        value={variant.cost}
+                                                        onChange={(e) => updateVariant(index, 'cost', e.target.value)}
+                                                        placeholder="Opcional"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-700 mb-1">Margen</label>
+                                                    <div className="flex items-center h-[42px]">
+                                                        <span className={`text-sm font-semibold ${margin !== '-' && parseFloat(margin) > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                                                            {margin !== '-' ? `${margin}%` : '-'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Imágenes */}
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 mb-2">Imágenes</label>
+                                                <div className="flex items-start gap-3">
+                                                    <div
+                                                        className="w-16 h-16 border-2 border-dashed border-secondary rounded-lg flex flex-col items-center justify-center text-secondary text-[10px] cursor-pointer hover:bg-secondary/10 transition-all flex-shrink-0"
+                                                        onClick={() => document.getElementById(`variant-file-mobile-${index}`).click()}
+                                                    >
+                                                        <input
+                                                            id={`variant-file-mobile-${index}`}
+                                                            type="file"
+                                                            accept="image/*"
+                                                            multiple
+                                                            className="hidden"
+                                                            disabled={uploadingVariantIndex === index}
+                                                            onChange={(e) => handleVariantImageUpload(index, e.target.files)}
+                                                        />
+                                                        {uploadingVariantIndex === index ? (
+                                                            <span className="animate-spin text-lg">⌛</span>
+                                                        ) : (
+                                                            <>
+                                                                <span className="text-2xl leading-none font-light">+</span>
+                                                                <span className="text-[9px] opacity-60 mt-1">
+                                                                    {variant.images?.length || 0}/5
+                                                                </span>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                    {variant.images && variant.images.length > 0 && (
+                                                        <div className="flex gap-2 overflow-x-auto flex-1">
+                                                            {variant.images.map((img, imgIdx) => (
+                                                                <div key={imgIdx} className="relative group flex-shrink-0">
+                                                                    <img
+                                                                        src={img.url}
+                                                                        alt={`Img ${imgIdx + 1}`}
+                                                                        className="w-16 h-16 object-contain rounded-lg border-2 border-gray-200"
+                                                                    />
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => removeVariantImage(index, imgIdx)}
+                                                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-sm font-bold"
+                                                                    >
+                                                                        ×
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* DESKTOP: Tabla (md y superior) */}
+                            <div className="hidden md:block overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-100">
                                         <tr>
                                             {variants.some(v => v.combination && v.combination.length > 0) && (
-                                                <th className="px-4 py-3 text-left text-sm font-semibold text-primary">
+                                                <th className="px-4 py-3 text-left text-sm font-semibold text-primary whitespace-nowrap">
                                                     Combinación
                                                 </th>
                                             )}
-                                            <th className="px-4 py-3 text-left text-sm font-semibold text-primary">SKU *</th>
-                                            <th className="px-4 py-3 text-left text-sm font-semibold text-primary">Stock</th>
-                                            <th className="px-4 py-3 text-left text-sm font-semibold text-primary">Precio Venta *</th>
-                                            <th className="px-4 py-3 text-left text-sm font-semibold text-primary">P. Promoción</th>
-                                            <th className="px-4 py-3 text-left text-sm font-semibold text-primary">Costo</th>
-                                            <th className="px-4 py-3 text-left text-sm font-semibold text-primary">Margen</th>
-                                            <th className="px-4 py-3 text-left text-sm font-semibold text-primary">Imágenes</th>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-primary whitespace-nowrap">SKU *</th>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-primary whitespace-nowrap">Stock</th>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-primary whitespace-nowrap">Precio Venta *</th>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-primary whitespace-nowrap">P. Promoción</th>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-primary whitespace-nowrap">Costo</th>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-primary whitespace-nowrap">Margen</th>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-primary whitespace-nowrap">Imágenes</th>
                                             {!isEditing && (
-                                                <th className="px-4 py-3 text-left text-sm font-semibold text-primary">Acciones</th>
+                                                <th className="px-4 py-3 text-left text-sm font-semibold text-primary whitespace-nowrap">Acciones</th>
                                             )}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {variants.map((variant, index) => {
-                                            // Calcular margen de ganancia
                                             const sale = parseFloat(variant.salePrice);
                                             const cost = parseFloat(variant.cost);
                                             const margin = (sale && cost) ? (((sale - cost) / cost) * 100).toFixed(1) : '-';
@@ -847,7 +1064,6 @@ export default function ProductFormUnified() {
                                                             {variant.combination && variant.combination.length > 0 ? (
                                                                 <div className="flex flex-wrap gap-2">
                                                                     {variant.combination.map((combo, i) => {
-                                                                        // Si tiene hexColor, mostrar círculo de color grande
                                                                         if (combo.hexColor) {
                                                                             return (
                                                                                 <span
@@ -858,7 +1074,6 @@ export default function ProductFormUnified() {
                                                                                 ></span>
                                                                             );
                                                                         }
-                                                                        // Si no tiene color, mostrar badge normal
                                                                         return (
                                                                             <span key={i} className="text-xs bg-secondary/10 text-secondary px-2 py-1 rounded font-medium">
                                                                                 {combo.valueName}
@@ -871,7 +1086,7 @@ export default function ProductFormUnified() {
                                                             )}
                                                         </td>
                                                     )}
-                                                    <td className="px-4 py-3">
+                                                    <td className="px-4 py-3 whitespace-nowrap">
                                                         <input
                                                             type="text"
                                                             className="w-32 px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-secondary"
@@ -882,7 +1097,7 @@ export default function ProductFormUnified() {
                                                             disabled={variant.isExisting}
                                                         />
                                                     </td>
-                                                    <td className="px-4 py-3">
+                                                    <td className="px-4 py-3 whitespace-nowrap">
                                                         <input
                                                             type="number"
                                                             className="w-20 px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-secondary"
@@ -891,7 +1106,7 @@ export default function ProductFormUnified() {
                                                             min="0"
                                                         />
                                                     </td>
-                                                    <td className="px-4 py-3">
+                                                    <td className="px-4 py-3 whitespace-nowrap">
                                                         <input
                                                             type="number"
                                                             step="0.01"
@@ -903,14 +1118,14 @@ export default function ProductFormUnified() {
                                                             required
                                                         />
                                                     </td>
-                                                    <td className="px-4 py-3">
+                                                    <td className="px-4 py-3 whitespace-nowrap">
                                                         <input
                                                             type="number"
                                                             step="0.01"
                                                             min="0"
                                                             className={`w-28 px-3 py-2 text-sm border rounded focus:outline-none focus:ring-2 ${variant.promotionPrice && parseFloat(variant.promotionPrice) >= parseFloat(variant.salePrice)
-                                                                    ? 'border-red-500 focus:ring-red-500 bg-red-50'
-                                                                    : 'border-gray-300 focus:ring-secondary'
+                                                                ? 'border-red-500 focus:ring-red-500 bg-red-50'
+                                                                : 'border-gray-300 focus:ring-secondary'
                                                                 }`}
                                                             value={variant.promotionPrice}
                                                             onChange={(e) => updateVariant(index, 'promotionPrice', e.target.value)}
@@ -922,7 +1137,7 @@ export default function ProductFormUnified() {
                                                             </p>
                                                         )}
                                                     </td>
-                                                    <td className="px-4 py-3">
+                                                    <td className="px-4 py-3 whitespace-nowrap">
                                                         <input
                                                             type="number"
                                                             step="0.01"
@@ -933,20 +1148,15 @@ export default function ProductFormUnified() {
                                                             placeholder="Opcional"
                                                         />
                                                     </td>
-                                                    <td className="px-4 py-3">
+                                                    <td className="px-4 py-3 whitespace-nowrap">
                                                         <span className={`text-sm font-semibold ${margin !== '-' && parseFloat(margin) > 0 ? 'text-green-600' : 'text-gray-400'}`}>
                                                             {margin !== '-' ? `${margin}%` : '-'}
                                                         </span>
                                                     </td>
                                                     <td className="px-4 py-3">
-                                                        {/* Contenedor horizontal: dropzone + imágenes */}
                                                         <div className="flex items-start gap-3 min-w-[200px]">
-                                                            {/* Dropzone cuadrado */}
                                                             <div
-                                                                className="w-16 h-16 border-2 border-dashed border-secondary rounded-lg 
-                                                                           flex flex-col items-center justify-center text-secondary 
-                                                                           text-[10px] cursor-pointer hover:bg-secondary/10 transition-all
-                                                                           flex-shrink-0"
+                                                                className="w-16 h-16 border-2 border-dashed border-secondary rounded-lg flex flex-col items-center justify-center text-secondary text-[10px] cursor-pointer hover:bg-secondary/10 transition-all flex-shrink-0"
                                                                 onClick={() => document.getElementById(`variant-file-${index}`).click()}
                                                                 onDragOver={(e) => e.preventDefault()}
                                                                 onDrop={(e) => {
@@ -966,7 +1176,6 @@ export default function ProductFormUnified() {
                                                                     disabled={uploadingVariantIndex === index}
                                                                     onChange={(e) => handleVariantImageUpload(index, e.target.files)}
                                                                 />
-
                                                                 {uploadingVariantIndex === index ? (
                                                                     <span className="animate-spin text-lg">⌛</span>
                                                                 ) : (
@@ -978,8 +1187,6 @@ export default function ProductFormUnified() {
                                                                     </>
                                                                 )}
                                                             </div>
-
-                                                            {/* Previews de imágenes con scroll horizontal */}
                                                             {variant.images && variant.images.length > 0 && (
                                                                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 max-w-[300px]">
                                                                     {variant.images.map((img, imgIdx) => (
@@ -1003,17 +1210,19 @@ export default function ProductFormUnified() {
                                                             )}
                                                         </div>
                                                     </td>
-                                                    <td className="px-4 py-3">
-                                                        <Button
-                                                            variant="danger"
-                                                            size="sm"
-                                                            onClick={() => removeVariant(index)}
-                                                            disabled={variant.isExisting || variants.length === 1}
-                                                            title={variant.isExisting ? "No se puede eliminar variante existente" : "Eliminar variante"}
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </Button>
-                                                    </td>
+                                                    {!isEditing && (
+                                                        <td className="px-4 py-3">
+                                                            <Button
+                                                                variant="danger"
+                                                                size="sm"
+                                                                onClick={() => removeVariant(index)}
+                                                                disabled={variant.isExisting || variants.length === 1}
+                                                                title={variant.isExisting ? "No se puede eliminar variante existente" : "Eliminar variante"}
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </Button>
+                                                        </td>
+                                                    )}
                                                 </tr>
                                             );
                                         })}

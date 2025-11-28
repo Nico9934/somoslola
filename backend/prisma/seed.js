@@ -3,8 +3,43 @@ import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
+// ============ CONFIGURACIÓN ============
+// Cambia esta variable a true si quieres BORRAR TODA LA BASE DE DATOS antes de ejecutar el seed
+// Por defecto es false: solo agrega datos que no existen (modo incremental)
+// Uso en PowerShell: $env:RESET_DB="true"; node prisma/seed.js
+// Uso en Bash/Linux: RESET_DB=true node prisma/seed.js
+const RESET_DB = process.env.RESET_DB === 'true';
+
 async function main() {
     console.log("🌱 Iniciando Seed de datos...");
+
+    if (RESET_DB) {
+        console.log("\n⚠️  MODO RESET: Limpiando base de datos...");
+
+        // Orden correcto para evitar errores de foreign key
+        await prisma.orderItem.deleteMany();
+        await prisma.order.deleteMany();
+        await prisma.cartItem.deleteMany();
+        await prisma.cart.deleteMany();
+        await prisma.stock.deleteMany();
+        await prisma.productImage.deleteMany();
+        await prisma.variantAttributeValue.deleteMany();
+        await prisma.productVariant.deleteMany();
+        await prisma.productAttribute.deleteMany();
+        await prisma.product.deleteMany();
+        await prisma.attributeValue.deleteMany();
+        await prisma.attribute.deleteMany();
+        await prisma.category.deleteMany();
+        await prisma.brand.deleteMany();
+        await prisma.user.deleteMany();
+        await prisma.shippingZone.deleteMany();
+        await prisma.heroBanner.deleteMany();
+        await prisma.paymentSettings.deleteMany();
+
+        console.log("✅ Base de datos limpiada");
+    } else {
+        console.log("\n✨ MODO INCREMENTAL: Solo se agregarán datos nuevos");
+    }
 
     // ============ ATRIBUTOS PREDEFINIDOS ============
     console.log("\n📦 Creando atributos globales...");
@@ -189,13 +224,12 @@ async function main() {
     // ============ USUARIO ADMIN ============
     console.log("👤 Creando usuario admin...");
 
-    // Crear Admin
     const adminEmail = "admin@somoslola.com";
     const adminPass = await bcrypt.hash("admin123", 10);
 
     await prisma.user.upsert({
         where: { email: adminEmail },
-        update: {},
+        update: { password: adminPass }, // 🔄 Actualiza la contraseña si ya existe
         create: {
             email: adminEmail,
             password: adminPass,
@@ -203,56 +237,33 @@ async function main() {
         },
     });
 
-    console.log("✔ Admin creado");
+    console.log("✔ Admin creado/actualizado");
 
     // ============ USUARIOS DE PRUEBA ============
     console.log("👥 Creando usuarios de prueba...");
 
-    // Prueba 1
-    await prisma.user.upsert({
-        where: { email: "prueba1@test.com" },
-        update: {},
-        create: {
-            email: "prueba1@test.com",
-            password: await bcrypt.hash("prueba1", 10),
-            role: "CUSTOMER",
-        },
-    });
+    const testUsers = [
+        { email: "prueba1@test.com", password: "prueba1" },
+        { email: "prueba2@test.com", password: "prueba2" },
+        { email: "prueba3@test.com", password: "prueba3" },
+        { email: "prueba4@test.com", password: "prueba4" },
+    ];
 
-    // Prueba 2
-    await prisma.user.upsert({
-        where: { email: "prueba2@test.com" },
-        update: {},
-        create: {
-            email: "prueba2@test.com",
-            password: await bcrypt.hash("prueba2", 10),
-            role: "CUSTOMER",
-        },
-    });
+    for (const user of testUsers) {
+        const hashedPassword = await bcrypt.hash(user.password, 10);
+        await prisma.user.upsert({
+            where: { email: user.email },
+            update: { password: hashedPassword }, // 🔄 Actualiza la contraseña si ya existe
+            create: {
+                email: user.email,
+                password: hashedPassword,
+                role: "CUSTOMER",
+            },
+        });
+        console.log(`  ✅ ${user.email} creado/actualizado`);
+    }
 
-    // Prueba 3
-    await prisma.user.upsert({
-        where: { email: "prueba3@test.com" },
-        update: {},
-        create: {
-            email: "prueba3@test.com",
-            password: await bcrypt.hash("prueba3", 10),
-            role: "CUSTOMER",
-        },
-    });
-
-    // Prueba 4
-    await prisma.user.upsert({
-        where: { email: "prueba4@test.com" },
-        update: {},
-        create: {
-            email: "prueba4@test.com",
-            password: await bcrypt.hash("prueba4", 10),
-            role: "CUSTOMER",
-        },
-    });
-
-    console.log("✔ Usuarios de prueba creados\n");
+    console.log("✔ Usuarios de prueba creados/actualizados\n");
 
     // ============ CATEGORÍAS ============
     console.log("📁 Creando categorías...");
