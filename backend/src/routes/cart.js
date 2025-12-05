@@ -179,6 +179,7 @@ router.get("/:id", async (req, res) => {
         include: {
           variant: {
             include: {
+              images: true, // Imágenes de la variante
               product: {
                 include: { images: true }
               },
@@ -209,6 +210,144 @@ router.get("/:id", async (req, res) => {
   });
   console.log('📖 === FIN OBTENER CARRITO ===\n');
   res.json(cart);
+});
+
+/* -------------------------------------------------------
+   💰 GET /cart/{id}/summary - Resumen con precios calculados server-side
+------------------------------------------------------- */
+/**
+ * @swagger
+ * /cart/{id}/summary:
+ *   get:
+ *     summary: Obtiene resumen del carrito con precios calculados server-side
+ *     tags: [Cart]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID del carrito
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: paymentMethod
+ *         description: Método de pago (CARD o TRANSFER)
+ *         schema:
+ *           type: string
+ *           enum: [CARD, TRANSFER]
+ *           default: TRANSFER
+ *     responses:
+ *       200: { description: Resumen del carrito calculado }
+ *       404: { description: Carrito no encontrado }
+ */
+router.get("/:id/summary", async (req, res) => {
+  console.log('💰 === INICIO CALCULAR RESUMEN DEL CARRITO ===');
+  console.log('📥 ID del carrito:', req.params.id);
+
+  const { paymentMethod = 'TRANSFER' } = req.query;
+  console.log('💳 Método de pago:', paymentMethod);
+
+  try {
+    // Obtener carrito con items y variantes
+    const cart = await prisma.cart.findUnique({
+      where: { id: req.params.id },
+      include: {
+        items: {
+          include: {
+            variant: {
+              include: {
+                product: true,
+                images: true,
+                attributeValues: {
+                  include: {
+                    attributeValue: {
+                      include: { attribute: true }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!cart) {
+      console.log('❌ Carrito no encontrado');
+      console.log('💰 === FIN CALCULAR RESUMEN DEL CARRITO ===\n');
+      return res.status(404).json({ error: "Carrito no encontrado" });
+    }
+
+    // Obtener configuración de pagos
+    let paymentSettings = await prisma.paymentSettings.findFirst();
+    if (!paymentSettings) {
+      paymentSettings = await prisma.paymentSettings.create({
+        data: {
+          transferDiscount: 20,
+          installmentsCount: 3,
+          installmentsActive: true
+        }
+      });
+    }
+
+    console.log('⚙️ Configuración de pagos:', {
+      transferDiscount: paymentSettings.transferDiscount,
+      installmentsCount: paymentSettings.installmentsCount,
+      installmentsActive: paymentSettings.installmentsActive
+    });
+
+    // Calcular subtotal (precio base sin descuentos por método de pago)
+    const subtotal = cart.items.reduce((sum, item) => {
+      const basePrice = item.variant?.promotionPrice || item.variant?.salePrice || 0;
+      return sum + (basePrice * item.quantity);
+    }, 0);
+
+    // Calcular subtotal con descuento por transferencia si aplica
+    const transferDiscountPercent = paymentSettings.transferDiscount / 100;
+    const subtotalWithTransferDiscount = Math.round(subtotal * (1 - transferDiscountPercent));
+
+    // Determinar qué subtotal usar según método de pago
+    const finalSubtotal = paymentMethod === 'TRANSFER'
+      ? subtotalWithTransferDiscount
+      : subtotal;
+
+    console.log('💵 Cálculos:', {
+      subtotalOriginal: subtotal,
+      descuentoTransferencia: paymentSettings.transferDiscount + '%',
+      subtotalConDescuento: subtotalWithTransferDiscount,
+      metodoPago: paymentMethod,
+      subtotalFinal: finalSubtotal
+    });
+
+    const summary = {
+      cart,
+      pricing: {
+        subtotal, // Precio original (con promo si existe, pero sin descuento de transferencia)
+        subtotalWithTransferDiscount, // Precio con descuento por transferencia
+        finalSubtotal, // Subtotal que se debe mostrar según método de pago
+        transferDiscount: paymentSettings.transferDiscount,
+        itemCount: cart.items.reduce((sum, item) => sum + item.quantity, 0)
+      },
+      paymentSettings: {
+        transferDiscount: paymentSettings.transferDiscount,
+        installmentsCount: paymentSettings.installmentsCount,
+        installmentsActive: paymentSettings.installmentsActive
+      }
+    };
+
+    console.log('✅ Resumen calculado:', {
+      items: cart.items.length,
+      subtotal: summary.pricing.subtotal,
+      finalSubtotal: summary.pricing.finalSubtotal,
+      transferDiscount: summary.pricing.transferDiscount + '%'
+    });
+    console.log('💰 === FIN CALCULAR RESUMEN DEL CARRITO ===\n');
+
+    res.json(summary);
+  } catch (error) {
+    console.error('❌ Error al calcular resumen:', error);
+    console.log('💰 === FIN CALCULAR RESUMEN DEL CARRITO ===\n');
+    res.status(500).json({ error: "Error al calcular resumen del carrito" });
+  }
 });
 
 /* -------------------------------------------------------
@@ -596,9 +735,14 @@ router.delete("/:cartId/variant/:variantId", async (req, res) => {
     liberando: item.quantity
   });
 
-  await prisma.stock.update({
-    where: { variantId: Number(variantId) },
-    data: { reservedQty: { decrement: item.quantity } }
+  // Usar transacción para garantizar atomicidad
+  await prisma.$transaction(async (tx) => {
+    await tx.stock.update({
+      where: { variantId: Number(variantId) },
+      data: { reservedQty: { decrement: item.quantity } }
+    });
+
+    await tx.cartItem.delete({ where: { id: item.id } });
   });
 
   const stockAfter = await prisma.stock.findUnique({
@@ -611,9 +755,6 @@ router.delete("/:cartId/variant/:variantId", async (req, res) => {
     stockReservado: stockAfter.reservedQty,
     esperado: stockBefore.reservedQty - item.quantity
   });
-
-  // Eliminar item del carrito
-  await prisma.cartItem.delete({ where: { id: item.id } });
 
   console.log('✅ Item eliminado del carrito. Stock liberado:', item.quantity);
   console.log('🗑️ === FIN ELIMINAR ITEM ===\n');
@@ -657,17 +798,20 @@ router.delete("/:id", async (req, res) => {
 
   console.log(`🔍 Liberando stock de ${cart.items.length} items...`);
 
-  // Liberar stock reservado de todos los items
-  for (const item of cart.items) {
-    console.log(`📦 Liberando variantId ${item.variantId}, cantidad: ${item.quantity}`);
-    await prisma.stock.update({
-      where: { variantId: item.variantId },
-      data: { reservedQty: { decrement: item.quantity } }
-    });
-  }
+  // Usar transacción para garantizar atomicidad
+  await prisma.$transaction(async (tx) => {
+    // Liberar stock reservado de todos los items
+    for (const item of cart.items) {
+      console.log(`📦 Liberando variantId ${item.variantId}, cantidad: ${item.quantity}`);
+      await tx.stock.update({
+        where: { variantId: item.variantId },
+        data: { reservedQty: { decrement: item.quantity } }
+      });
+    }
 
-  // Eliminar todos los items del carrito
-  await prisma.cartItem.deleteMany({ where: { cartId } });
+    // Eliminar todos los items del carrito
+    await tx.cartItem.deleteMany({ where: { cartId } });
+  });
 
   console.log(`✅ Carrito vaciado. Stock liberado para ${cart.items.length} items`);
   console.log('🗑️ === FIN VACIAR CARRITO ===\n');

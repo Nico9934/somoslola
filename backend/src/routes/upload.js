@@ -67,15 +67,15 @@ router.post('/product-image', authMiddleware, adminOnly, upload.single('image'),
             size: `${(req.file.size / 1024).toFixed(2)} KB`
         });
 
-        // Subir a Cloudinary usando buffer
+        // Subir a Cloudinary usando buffer con alta calidad
         const result = await new Promise((resolve, reject) => {
             const uploadStream = cloudinary.uploader.upload_stream(
                 {
                     folder: 'somoslola/products',
                     resource_type: 'image',
                     transformation: [
-                        { width: 1000, height: 1000, crop: 'limit' },
-                        { quality: 'auto:good' }
+                        { width: 2000, height: 2000, crop: 'limit' },
+                        { quality: 90 }
                     ]
                 },
                 (error, result) => {
@@ -130,15 +130,15 @@ router.post('/payment-proof', authMiddleware, upload.single('image'), async (req
             size: `${(req.file.size / 1024).toFixed(2)} KB`
         });
 
-        // Subir a Cloudinary
+        // Subir a Cloudinary con alta calidad
         const result = await new Promise((resolve, reject) => {
             const uploadStream = cloudinary.uploader.upload_stream(
                 {
                     folder: 'somoslola/payment-proofs',
                     resource_type: 'image',
                     transformation: [
-                        { width: 1500, height: 1500, crop: 'limit' },
-                        { quality: 'auto:good' }
+                        { width: 2000, height: 2000, crop: 'limit' },
+                        { quality: 90 }
                     ]
                 },
                 (error, result) => {

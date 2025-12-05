@@ -127,8 +127,20 @@ router.post("/checkout", optionalAuth, async (req, res) => {
             }
         }
 
-        // Calcular total de productos usando el precio final (con promoción si existe)
-        const subtotal = cart.items.reduce(
+        // Obtener configuración de pagos para aplicar descuento si corresponde
+        let paymentSettings = await prisma.paymentSettings.findFirst();
+        if (!paymentSettings) {
+            paymentSettings = await prisma.paymentSettings.create({
+                data: {
+                    transferDiscount: 20,
+                    installmentsCount: 3,
+                    installmentsActive: true
+                }
+            });
+        }
+
+        // Calcular subtotal base (con promoción si existe)
+        const baseSubtotal = cart.items.reduce(
             (sum, item) => {
                 const finalPrice = item.variant.promotionPrice || item.variant.salePrice;
                 return sum + finalPrice * item.quantity;
@@ -136,7 +148,15 @@ router.post("/checkout", optionalAuth, async (req, res) => {
             0
         );
 
-        // Total final = subtotal + envío
+        // Aplicar descuento por transferencia si el método de pago es TRANSFER
+        let subtotal = baseSubtotal;
+        if (paymentMethod === "TRANSFER") {
+            const transferDiscountPercent = paymentSettings.transferDiscount / 100;
+            subtotal = Math.round(baseSubtotal * (1 - transferDiscountPercent));
+            console.log(`💰 Descuento por transferencia aplicado: ${paymentSettings.transferDiscount}% - Subtotal original: $${baseSubtotal} → Subtotal con descuento: $${subtotal}`);
+        }
+
+        // Total final = subtotal (con descuento si aplica) + envío
         const total = subtotal + shippingCost;
 
         // Crear orden con snapshot de datos para preservar historial
@@ -155,13 +175,23 @@ router.post("/checkout", optionalAuth, async (req, res) => {
                 paymentMethod,
                 total,
                 status: "PENDING",
+                reservedUntil: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 horas
                 items: {
                     create: cart.items.map((item) => {
-                        const finalPrice = item.variant.promotionPrice || item.variant.salePrice;
+                        // Calcular precio base (con promoción si existe)
+                        const basePrice = item.variant.promotionPrice || item.variant.salePrice;
+
+                        // Aplicar descuento por transferencia si corresponde
+                        let finalPrice = basePrice;
+                        if (paymentMethod === "TRANSFER") {
+                            const transferDiscountPercent = paymentSettings.transferDiscount / 100;
+                            finalPrice = Math.round(basePrice * (1 - transferDiscountPercent));
+                        }
+
                         return {
                             variantId: item.variantId,
                             quantity: item.quantity,
-                            price: finalPrice, // Guardar precio final (con promo si existe)
+                            price: finalPrice, // Guardar precio con descuento aplicado si es transferencia
                             // 📸 Snapshot de datos para preservar información
                             productName: item.variant.product.name,
                             variantSku: item.variant.sku,
@@ -174,7 +204,11 @@ router.post("/checkout", optionalAuth, async (req, res) => {
             include: { items: true },
         });
 
-        // Vaciar carrito (el stock se descuenta cuando se confirma el pedido)
+        // ⚠️ NO LIBERAR las reservas - se mantienen hasta confirmar o expirar orden
+        // Las reservas permanecen activas por 24 horas (campo reservedUntil)
+        console.log(`🔒 Reservas mantenidas para orden #${order.id} hasta: ${order.reservedUntil.toISOString()}`);
+
+        // Vaciar carrito (las reservas pasan de CartItem a Order)
         await prisma.cartItem.deleteMany({ where: { cartId } });
 
         console.log("✅ Orden creada exitosamente:", order.id, "- Total:", total, "- Método:", paymentMethod);
@@ -297,10 +331,17 @@ router.put("/:id/status", authMiddleware, async (req, res) => {
         }
 
         const id = Number(req.params.id);
-        const { status } = req.body;
+        const { status, trackingNumber } = req.body;
 
         if (!status) {
             return res.status(400).json({ error: "Estado requerido" });
+        }
+
+        // ⚠️ VALIDACIÓN: Si el estado es SHIPPED, el tracking number es OBLIGATORIO
+        if (status === "SHIPPED" && !trackingNumber) {
+            return res.status(400).json({
+                error: "El número de seguimiento es obligatorio cuando se marca el pedido como enviado"
+            });
         }
 
         // Validar que el estado sea válido (debe coincidir con el enum OrderStatus)
@@ -323,7 +364,7 @@ router.put("/:id/status", authMiddleware, async (req, res) => {
 
         console.log(`📦 Orden #${id}: Estado actual: ${order.status} → Nuevo estado: ${status}`);
 
-        // Si el estado cambia de PENDING a PAID (transferencia confirmada) → descontar stock
+        // Si el estado cambia de PENDING a PAID (transferencia confirmada) → descontar stock Y liberar reservas
         const shouldDecrementStock =
             order.status === "PENDING" &&
             status === "PAID";
@@ -331,47 +372,79 @@ router.put("/:id/status", authMiddleware, async (req, res) => {
         console.log(`¿Descontar stock? ${shouldDecrementStock}`);
 
         if (shouldDecrementStock) {
-            // Descontar stock de cada item
-            for (const item of order.items) {
-                console.log(`📦 Item: ${item.variantSku}, variantId: ${item.variantId}, cantidad: ${item.quantity}`);
+            // Usar transacción para descontar stock y liberar reservas
+            await prisma.$transaction(async (tx) => {
+                // Descontar stock de cada item
+                for (const item of order.items) {
+                    console.log(`📦 Item: ${item.variantSku}, variantId: ${item.variantId}, cantidad: ${item.quantity}`);
 
-                if (!item.variantId) {
-                    console.warn(`⚠️ Item ${item.id} no tiene variantId, saltando...`);
-                    continue;
+                    if (!item.variantId) {
+                        console.warn(`⚠️ Item ${item.id} no tiene variantId, saltando...`);
+                        continue;
+                    }
+
+                    const stockRecord = await tx.stock.findUnique({
+                        where: { variantId: item.variantId },
+                    });
+
+                    if (stockRecord) {
+                        // Validar que haya stock suficiente
+                        if (stockRecord.quantity < item.quantity) {
+                            throw new Error(
+                                `Stock insuficiente para ${item.variantSku}. Disponible: ${stockRecord.quantity}, Requerido: ${item.quantity}`
+                            );
+                        }
+
+                        // Descontar stock total Y liberar reserva
+                        await tx.stock.update({
+                            where: { variantId: item.variantId },
+                            data: {
+                                quantity: { decrement: item.quantity },
+                                reservedQty: { decrement: item.quantity }
+                            },
+                        });
+                        console.log(`✅ Stock descontado y reserva liberada: ${item.variantSku} (-${item.quantity})`);
+                    } else {
+                        console.warn(`⚠️ No existe registro de Stock para variantId ${item.variantId}`);
+                    }
                 }
+            });
 
+            console.log(`✅ Stock descontado y reservas liberadas para orden #${id}`);
+        }
+
+        // Si se cancela una orden PENDING → solo liberar reservas (no devolver stock porque nunca se descontó)
+        // Si se cancela una orden PAID/SHIPPED → devolver stock
+        const shouldLiberateReservations =
+            order.status === "PENDING" &&
+            status === "CANCELLED";
+
+        const shouldIncrementStock =
+            (order.status === "PAID" || order.status === "SHIPPED") &&
+            status === "CANCELLED";
+
+        console.log(`¿Liberar reservas (orden PENDING)? ${shouldLiberateReservations}`);
+        console.log(`¿Devolver stock (orden PAID)? ${shouldIncrementStock}`);
+
+        if (shouldLiberateReservations) {
+            // Solo liberar reservas, el stock total no cambia
+            for (const item of order.items) {
                 const stockRecord = await prisma.stock.findUnique({
                     where: { variantId: item.variantId },
                 });
 
                 if (stockRecord) {
-                    // Validar que haya stock suficiente
-                    if (stockRecord.quantity < item.quantity) {
-                        return res.status(400).json({
-                            error: `Stock insuficiente para ${item.variantSku}. Disponible: ${stockRecord.quantity}, Requerido: ${item.quantity}`,
-                        });
-                    }
-
                     await prisma.stock.update({
                         where: { variantId: item.variantId },
-                        data: { quantity: { decrement: item.quantity } },
+                        data: { reservedQty: { decrement: item.quantity } },
                     });
-                    console.log(`✅ Stock descontado: ${item.variantSku} (-${item.quantity})`);
-                } else {
-                    console.warn(`⚠️ No existe registro de Stock para variantId ${item.variantId}`);
                 }
             }
-            console.log(`✅ Stock descontado para orden #${id}`);
+            console.log(`✅ Reservas liberadas para orden PENDING cancelada #${id}`);
         }
 
-        // Si se cancela y ya estaba confirmado/pagado → devolver stock
-        const shouldIncrementStock =
-            (order.status === "PAID" || order.status === "SHIPPED") &&
-            status === "CANCELLED";
-
-        console.log(`¿Devolver stock? ${shouldIncrementStock}`);
-
         if (shouldIncrementStock) {
+            // Devolver stock (ya no está reservado porque se liberó al confirmar)
             for (const item of order.items) {
                 const stockRecord = await prisma.stock.findUnique({
                     where: { variantId: item.variantId },
@@ -384,18 +457,27 @@ router.put("/:id/status", authMiddleware, async (req, res) => {
                     });
                 }
             }
-            console.log(`✅ Stock devuelto para orden cancelada #${id}`);
+            console.log(`✅ Stock devuelto para orden PAID/SHIPPED cancelada #${id}`);
         }
 
-        // Actualizar estado
+        // Actualizar estado y tracking number si corresponde
+        const updateData = { status };
+        if (status === "SHIPPED" && trackingNumber) {
+            updateData.trackingNumber = trackingNumber;
+        }
+
         const updatedOrder = await prisma.order.update({
             where: { id },
-            data: { status },
+            data: updateData,
             include: { items: true },
         });
 
-        // Notificar al cliente del cambio de estado
-        await sendOrderStatusChangeToCustomer(updatedOrder, status);
+        // Notificar al cliente del cambio de estado (con tracking number si está disponible)
+        await sendOrderStatusChangeToCustomer(
+            updatedOrder,
+            status,
+            status === "SHIPPED" ? trackingNumber : null
+        );
 
         res.json(updatedOrder);
     } catch (error) {

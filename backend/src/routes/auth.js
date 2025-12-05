@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { authMiddleware } from "../middleware/auth.js";
+import emailService from "../services/emailService.js";
 
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -229,6 +230,156 @@ router.get("/me", authMiddleware, async (req, res) => {
     });
 
     res.json(user);
+});
+
+/**
+ * @swagger
+ * /auth/forgot-password:
+ *   post:
+ *     summary: Solicita recuperación de contraseña
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Código de recuperación enviado al email
+ *       404:
+ *         description: Email no registrado
+ */
+router.post("/forgot-password", async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        // Verificar que el email existe
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) {
+            return res.status(404).json({ error: "Email no registrado" });
+        }
+
+        // Generar código de 6 dígitos
+        const token = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Expiración en 15 minutos
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+        // Invalidar tokens anteriores del mismo email
+        await prisma.passwordResetToken.deleteMany({
+            where: { email, used: false }
+        });
+
+        // Guardar token en la base de datos
+        await prisma.passwordResetToken.create({
+            data: {
+                email,
+                token,
+                expiresAt,
+                used: false
+            }
+        });
+
+        // Enviar email con el código
+        await emailService.sendPasswordRecovery(email, token);
+
+        res.json({
+            message: "Código de recuperación enviado a tu email",
+            expiresIn: 15 // minutos
+        });
+    } catch (error) {
+        console.error('Error en forgot-password:', error);
+        res.status(500).json({ error: "Error al procesar solicitud" });
+    }
+});
+
+/**
+ * @swagger
+ * /auth/reset-password:
+ *   post:
+ *     summary: Restablece la contraseña usando el código recibido
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - token
+ *               - newPassword
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               token:
+ *                 type: string
+ *                 description: Código de 6 dígitos
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *     responses:
+ *       200:
+ *         description: Contraseña actualizada correctamente
+ *       400:
+ *         description: Código inválido o expirado
+ *       404:
+ *         description: Email no registrado
+ */
+router.post("/reset-password", async (req, res) => {
+    try {
+        const { email, token, newPassword } = req.body;
+
+        // Verificar que el email existe
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) {
+            return res.status(404).json({ error: "Email no registrado" });
+        }
+
+        // Buscar token válido
+        const resetToken = await prisma.passwordResetToken.findFirst({
+            where: {
+                email,
+                token,
+                used: false,
+                expiresAt: { gte: new Date() }
+            }
+        });
+
+        if (!resetToken) {
+            return res.status(400).json({
+                error: "Código inválido o expirado. Solicita uno nuevo."
+            });
+        }
+
+        // Hash de la nueva contraseña
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Actualizar contraseña
+        await prisma.user.update({
+            where: { email },
+            data: { password: hashedPassword }
+        });
+
+        // Marcar token como usado
+        await prisma.passwordResetToken.update({
+            where: { id: resetToken.id },
+            data: { used: true }
+        });
+
+        res.json({ message: "Contraseña actualizada correctamente" });
+    } catch (error) {
+        console.error('Error en reset-password:', error);
+        res.status(500).json({ error: "Error al restablecer contraseña" });
+    }
 });
 
 export default router;

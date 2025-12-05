@@ -97,7 +97,12 @@ const addCalculatedPrices = async (products) => {
 router.get("/", async (req, res) => {
     console.log('\n📋 GET /products - Listar productos con filtros');
 
-    const { categoryId, brandId, search } = req.query;
+    const { categoryId, brandId, search, page = '1', limit = '12' } = req.query;
+
+    // Convertir a números y validar
+    const pageNum = Math.max(1, parseInt(page));
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit))); // Máximo 50 por página
+    const skip = (pageNum - 1) * limitNum;
 
     // Construir filtros dinámicamente
     const where = {};
@@ -117,8 +122,13 @@ router.get("/", async (req, res) => {
         };
     }
 
+    // Obtener total de productos (para paginación)
+    const totalProducts = await prisma.product.count({ where });
+
     const products = await prisma.product.findMany({
         where,
+        skip,
+        take: limitNum,
         include: {
             variants: {
                 include: {
@@ -147,14 +157,29 @@ router.get("/", async (req, res) => {
                 }
             }
         },
+        orderBy: {
+            id: 'desc' // Más recientes primero
+        }
     });
 
-    console.log(`✅ Retornando ${products.length} productos (Filtros: cat=${categoryId}, brand=${brandId}, search='${search}')`);
+    const totalPages = Math.ceil(totalProducts / limitNum);
+    const hasMore = pageNum < totalPages;
+
+    console.log(`✅ Página ${pageNum}/${totalPages} - Retornando ${products.length}/${totalProducts} productos (Filtros: cat=${categoryId}, brand=${brandId}, search='${search}')`);
 
     // Agregar precios calculados (transferencia y cuotas) usando configuración de DB
     const productsWithPrices = await addCalculatedPrices(products);
 
-    res.json(productsWithPrices);
+    res.json({
+        products: productsWithPrices,
+        pagination: {
+            currentPage: pageNum,
+            totalPages,
+            totalProducts,
+            hasMore,
+            limit: limitNum
+        }
+    });
 });
 
 /**
