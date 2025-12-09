@@ -40,7 +40,7 @@ export const products = {
     /* Contenedor principal */
     productCard:
         "group bg-white rounded-lg border border-gray-200 overflow-hidden " +
-        "shadow-sm hover:shadow-md transition-all flex flex-col cursor-pointer",
+        "shadow-sm hover:shadow-lg transition-all duration-300 ease-out flex flex-col cursor-pointer",
 
     /* Contenedor que mantiene la proporción de imagen */
     productCardImageWrap:

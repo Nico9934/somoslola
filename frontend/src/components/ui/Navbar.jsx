@@ -18,7 +18,7 @@ export default function Navbar() {
         setIsMobileMenuOpen(false);
     };
 
-    const linkClass = "text-gray-600 hover:text-gray-900 transition-colors font-medium";
+    const linkClass = "text-gray-600 hover:text-black transition-all duration-200 font-medium relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-black after:transition-all after:duration-200 hover:after:w-full";
     const mobileLinkClass = "block py-2 text-gray-600 hover:bg-warm-50 px-4 rounded-lg transition-colors";
 
     return (
@@ -42,7 +42,7 @@ export default function Navbar() {
                     {/* Desktop Navigation */}
                     <div className="hidden md:flex items-center space-x-4">
                         {/* Carrito - SIEMPRE visible */}
-                        <Link to="/cart" className="relative text-gray-700 hover:text-black transition">
+                        <Link to="/cart" className="relative text-gray-700 hover:text-black transition-all duration-200 hover:scale-110">
                             <FaShoppingCart size={20} />
                             {itemsCount > 0 && (
                                 <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">

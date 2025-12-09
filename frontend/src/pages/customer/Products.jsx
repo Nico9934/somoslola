@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { productsService } from '../../api/products';
 import { categoriesService } from '../../api/categories';
 import { useCart } from '../../context/CartContext';
@@ -15,6 +16,7 @@ import { toast } from 'react-toastify';
 import { FaShoppingCart, FaHeart, FaEye } from 'react-icons/fa';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { text, layout, products as productStyles, inputs } from '../../styles';
+import { fadeInUp, hoverLift, tapScale } from '../../utils/animations';
 
 export default function Products() {
     const [products, setProducts] = useState([]);
@@ -349,10 +351,16 @@ export default function Products() {
                                             const isLastProduct = index === filteredProducts.length - 1;
 
                                             return (
-                                                <div
+                                                <motion.div
                                                     key={product.id}
                                                     className={productStyles.productCard}
                                                     ref={isLastProduct ? lastProductRef : null}
+                                                    initial="hidden"
+                                                    whileInView="visible"
+                                                    viewport={{ once: true, margin: "-50px" }}
+                                                    variants={fadeInUp}
+                                                    {...hoverLift}
+                                                    {...tapScale}
                                                 >
 
                                                     {/* Imagen */}
@@ -448,7 +456,7 @@ export default function Products() {
                                                             </button>
                                                         </div>
                                                     </div>
-                                                </div>
+                                                </motion.div>
                                             );
                                         })}
                                     </div>

@@ -91,22 +91,22 @@ export default function ProductFilters({
             <div className="mb-6 pb-6 border-b">
                 <button
                     onClick={() => toggleSection('categories')}
-                    className="flex justify-between items-center w-full mb-3"
+                    className="flex justify-between items-center w-full mb-3 group hover:bg-warm-50 -mx-2 px-2 py-1 rounded-lg transition-all duration-200"
                 >
                     <h3 className={text.label}>CATEGORÍAS</h3>
                     {expandedSections.categories ? (
-                        <ChevronUp className="w-4 h-4 text-gray-500" />
+                        <ChevronUp className="w-4 h-4 text-gray-500 group-hover:text-black transition-colors" />
                     ) : (
-                        <ChevronDown className="w-4 h-4 text-gray-500" />
+                        <ChevronDown className="w-4 h-4 text-gray-500 group-hover:text-black transition-colors" />
                     )}
                 </button>
 
                 {expandedSections.categories && (
-                    <div className="space-y-2">
+                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
                         {categories.map((category) => (
                             <div
                                 key={category.id}
-                                className="flex items-center cursor-pointer group"
+                                className="flex items-center cursor-pointer group hover:bg-warm-50 -mx-2 px-2 py-1.5 rounded-md transition-all duration-150"
                                 onClick={() => handleCategoryChange(category.id)}
                             >
                                 <input
@@ -130,22 +130,22 @@ export default function ProductFilters({
                 <div className="mb-6 pb-6 border-b">
                     <button
                         onClick={() => toggleSection('brands')}
-                        className="flex justify-between items-center w-full mb-3"
+                        className="flex justify-between items-center w-full mb-3 group hover:bg-warm-50 -mx-2 px-2 py-1 rounded-lg transition-all duration-200"
                     >
                         <h3 className={text.label}>MARCAS</h3>
                         {expandedSections.brands ? (
-                            <ChevronUp className="w-4 h-4 text-gray-500" />
+                            <ChevronUp className="w-4 h-4 text-gray-500 group-hover:text-black transition-colors" />
                         ) : (
-                            <ChevronDown className="w-4 h-4 text-gray-500" />
+                            <ChevronDown className="w-4 h-4 text-gray-500 group-hover:text-black transition-colors" />
                         )}
                     </button>
 
                     {expandedSections.brands && (
-                        <div className="space-y-2">
+                        <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
                             {brands.map((brand) => (
                                 <label
                                     key={brand.id}
-                                    className="flex items-center cursor-pointer group"
+                                    className="flex items-center cursor-pointer group hover:bg-warm-50 -mx-2 px-2 py-1.5 rounded-md transition-all duration-150"
                                 >
                                     <input
                                         type="checkbox"

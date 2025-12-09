@@ -27,7 +27,7 @@ export default function Footer() {
                                 href="https://www.instagram.com/somoslola"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-gray-400 hover:text-pink-500 transition-colors"
+                                className="text-gray-400 hover:text-pink-500 transition-all duration-300 hover:scale-110"
                                 aria-label="Instagram"
                             >
                                 <FaInstagram size={24} />
@@ -36,7 +36,7 @@ export default function Footer() {
                                 href="https://wa.me/542224468167"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-gray-400 hover:text-green-500 transition-colors"
+                                className="text-gray-400 hover:text-green-400 transition-all duration-300 hover:scale-110"
                                 aria-label="WhatsApp"
                             >
                                 <FaWhatsapp size={24} />
@@ -52,7 +52,7 @@ export default function Footer() {
                                 <li key={category.id}>
                                     <Link
                                         to="/products"
-                                        className="text-sm text-gray-400 hover:text-white transition-colors"
+                                        className="text-sm text-gray-400 hover:text-white hover:translate-x-1 transition-all duration-200 inline-block"
                                     >
                                         {category.name}
                                     </Link>
@@ -66,17 +66,17 @@ export default function Footer() {
                         <h3 className="text-white font-semibold mb-4">Información</h3>
                         <ul className="space-y-2">
                             <li>
-                                <Link to="/products" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link to="/products" className="text-sm text-gray-400 hover:text-white hover:translate-x-1 transition-all duration-200 inline-block">
                                     Productos
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/cart" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link to="/cart" className="text-sm text-gray-400 hover:text-white hover:translate-x-1 transition-all duration-200 inline-block">
                                     Carrito
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/orders" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link to="/orders" className="text-sm text-gray-400 hover:text-white hover:translate-x-1 transition-all duration-200 inline-block">
                                     Mis Pedidos
                                 </Link>
                             </li>
@@ -88,19 +88,19 @@ export default function Footer() {
                         <h3 className="text-white font-semibold mb-4">Contacto</h3>
                         <ul className="space-y-3">
                             <li className="flex items-start gap-2 text-sm text-gray-400">
-                                <FaWhatsapp className="mt-1 flex-shrink-0" />
-                                <a href="https://wa.me/542224468167" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                                <FaWhatsapp className="mt-1 flex-shrink-0 text-green-400" />
+                                <a href="https://wa.me/542224468167" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-all duration-200">
                                     +54 9 222 446-8167
                                 </a>
                             </li>
                             <li className="flex items-start gap-2 text-sm text-gray-400">
-                                <FaInstagram className="mt-1 flex-shrink-0" />
-                                <a href="https://www.instagram.com/somoslola" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                                <FaInstagram className="mt-1 flex-shrink-0 text-pink-500" />
+                                <a href="https://www.instagram.com/somoslola" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-all duration-200">
                                     @somoslola_
                                 </a>
                             </li>
                             <li className="flex items-start gap-2 text-sm text-gray-400">
-                                <FaMapMarkerAlt className="mt-1 flex-shrink-0" />
+                                <FaMapMarkerAlt className="mt-1 flex-shrink-0 text-red-400" />
                                 <span>Mar del Plata, Argentina</span>
                             </li>
                         </ul>
