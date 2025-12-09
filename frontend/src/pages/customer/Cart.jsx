@@ -12,17 +12,17 @@ import { text, products, badges, layout, buttons } from '../../styles';
 import { orderSummary } from '../../styles/components';
 
 export default function Cart() {
-    const { cart, loading, updateItem, removeItem, clearCart, loadCart } = useCart();
+    const { cart, loading, updateItem, removeItem, clearCart, loadCart, refreshCart } = useCart();
     const { user } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Si hay cartId en localStorage pero no hay cart cargado, cargar
+        // Recargar carrito cuando se monta el componente (al abrir la página del carrito)
         const cartId = localStorage.getItem('cartId');
-        if (cartId && !cart) {
-            loadCart(cartId);
+        if (cartId) {
+            refreshCart();
         }
-    }, [cart, loadCart]);
+    }, [refreshCart]);
 
     const handleUpdateQuantity = async (variantId, newQuantity) => {
         if (newQuantity < 1) return;
@@ -97,10 +97,10 @@ export default function Cart() {
 
                                 return (
                                     <Card key={item.id} variant="bordered">
-                                        <div className="flex gap-4">
+                                        <div className="flex flex-col sm:flex-row gap-4">
                                             {/* Imagen de la variante */}
                                             {variantImage ? (
-                                                <div className="w-24 h-24 bg-gray-100 rounded flex-shrink-0 overflow-hidden">
+                                                <div className="w-full sm:w-24 h-48 sm:h-24 bg-gray-100 rounded flex-shrink-0 overflow-hidden">
                                                     <img
                                                         src={variantImage}
                                                         alt={item.variant?.product?.name}
@@ -108,12 +108,12 @@ export default function Cart() {
                                                     />
                                                 </div>
                                             ) : (
-                                                <div className="w-24 h-24 bg-gray-200 rounded flex-shrink-0 flex items-center justify-center">
+                                                <div className="w-full sm:w-24 h-48 sm:h-24 bg-gray-200 rounded flex-shrink-0 flex items-center justify-center">
                                                     <span className="text-gray-400 text-xs">Sin imagen</span>
                                                 </div>
                                             )}
 
-                                            <div className="flex-1">
+                                            <div className="flex-1 min-w-0">
                                                 <h3 className={products.name}>
                                                     {item.variant?.product?.name}
                                                 </h3>
@@ -170,15 +170,16 @@ export default function Cart() {
                                                     </p>
                                                 )}
                                             </div>
-                                            <div className="flex flex-col items-end justify-between">
+                                            <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-between w-full sm:w-auto">
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => handleRemove(item.variantId)}
+                                                    className="order-2 sm:order-1"
                                                 >
                                                     🗑️
                                                 </Button>
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-2 order-1 sm:order-2">
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
@@ -186,7 +187,7 @@ export default function Cart() {
                                                     >
                                                         -
                                                     </Button>
-                                                    <span className="w-8 text-center">{item.quantity}</span>
+                                                    <span className="w-8 text-center font-medium">{item.quantity}</span>
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
@@ -216,7 +217,7 @@ export default function Cart() {
                                         <span className={orderSummary.totalValue}>${total.toLocaleString()}</span>
                                     </div>
                                 </div>
-                                <Button onClick={handleCheckout} className={buttons.full} size="lg">
+                                <Button onClick={handleCheckout} className={`${buttons.full} mt-4`} size="lg">
                                     Finalizar Compra
                                 </Button>
                             </Card>

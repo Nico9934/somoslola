@@ -53,22 +53,22 @@ export default function Dashboard() {
                 <div className="space-y-6">
                     {/* Stats Grid */}
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                            <h3 className={`${text.label} text-white opacity-90 mb-2`}>Total Pedidos</h3>
+                        <Card className="bg-gradient-to-br from-gray-800 to-black text-white shadow-md">
+                            <h3 className="text-sm font-medium text-white/80 mb-2">Total Pedidos</h3>
                             <p className="text-3xl font-bold">{summary?.totalOrders || 0}</p>
                         </Card>
-                        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-                            <h3 className={`${text.label} text-white opacity-90 mb-2`}>Total Clientes</h3>
+                        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white shadow-md">
+                            <h3 className="text-sm font-medium text-white/80 mb-2">Total Clientes</h3>
                             <p className="text-3xl font-bold">{summary?.totalCustomers || 0}</p>
                         </Card>
-                        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-                            <h3 className={`${text.label} text-white opacity-90 mb-2`}>Ventas Totales</h3>
+                        <Card className="bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md">
+                            <h3 className="text-sm font-medium text-white/80 mb-2">Ventas Totales</h3>
                             <p className="text-3xl font-bold">
                                 ${(summary?.totalSales || 0).toLocaleString()}
                             </p>
                         </Card>
-                        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-                            <h3 className={`${text.label} text-white opacity-90 mb-2`}>Ticket Promedio</h3>
+                        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md">
+                            <h3 className="text-sm font-medium text-white/80 mb-2">Ticket Promedio</h3>
                             <p className="text-3xl font-bold">
                                 ${(summary?.ticketPromedio || 0).toLocaleString()}
                             </p>
@@ -84,7 +84,7 @@ export default function Dashboard() {
                                     <p className={`${text.muted} text-center py-8`}>No hay datos disponibles</p>
                                 ) : (
                                     topProducts.map((item, index) => (
-                                        <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                                        <div key={index} className="flex justify-between items-center p-3 bg-warm-50 rounded-lg hover:bg-warm-100 transition">
                                             <div className="flex-1">
                                                 <p className={text.label}>{item.productName}</p>
                                                 <p className={text.muted}>SKU: {item.sku}</p>

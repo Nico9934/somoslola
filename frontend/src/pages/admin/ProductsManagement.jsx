@@ -34,11 +34,13 @@ export default function ProductsManagement() {
                 categoriesService.getAll(),
                 api.get('/brands')
             ]);
-            setProducts(productsData);
+            // Manejar tanto arrays como objetos con paginación
+            setProducts(Array.isArray(productsData) ? productsData : productsData.products || []);
             setCategories(categoriesData);
             setBrands(brandsData.data);
         } catch (error) {
             console.error('Error loading data:', error);
+            setProducts([]); // Asegurar que products siempre sea un array
         } finally {
             setLoading(false);
         }
@@ -116,7 +118,7 @@ export default function ProductsManagement() {
                     onCreateClick={() => navigate('/admin/products/new')}
                 >
                     {/* Barra de filtros */}
-                    <div className="mb-6 bg-white rounded-lg shadow-sm p-4">
+                    <div className="mb-6 bg-white border border-gray-200 rounded-lg shadow-sm p-4">
                         <div className="flex flex-wrap gap-4 items-end">
                             {/* Filtro por Categoría */}
                             <div className="flex-1 min-w-[200px]">
@@ -126,7 +128,7 @@ export default function ProductsManagement() {
                                 <select
                                     value={filters.categoryId}
                                     onChange={(e) => handleFilterChange('categoryId', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent bg-white"
                                 >
                                     <option value="">Todas las categorías</option>
                                     {categories.map(cat => (
@@ -143,7 +145,7 @@ export default function ProductsManagement() {
                                 <select
                                     value={filters.brandId}
                                     onChange={(e) => handleFilterChange('brandId', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent bg-white"
                                 >
                                     <option value="">Todas las marcas</option>
                                     {brands.map(brand => (
@@ -159,7 +161,7 @@ export default function ProductsManagement() {
                                         type="checkbox"
                                         checked={filters.outOfStock}
                                         onChange={(e) => handleFilterChange('outOfStock', e.target.checked)}
-                                        className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary mr-2"
+                                        className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black mr-2"
                                     />
                                     <span className="text-sm font-medium text-gray-700">Solo sin stock</span>
                                 </label>
@@ -170,7 +172,7 @@ export default function ProductsManagement() {
                                 <div>
                                     <button
                                         onClick={handleClearFilters}
-                                        className="px-4 py-2 text-sm text-primary flex items-center gap-1 border border-primary rounded-lg hover:bg-primary hover:text-white transition-colors"
+                                        className="px-4 py-2 text-sm text-gray-700 flex items-center gap-1 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
                                     >
                                         <X className="w-4 h-4" />
                                         Limpiar filtros

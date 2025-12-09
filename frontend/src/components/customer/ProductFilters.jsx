@@ -104,20 +104,22 @@ export default function ProductFilters({
                 {expandedSections.categories && (
                     <div className="space-y-2">
                         {categories.map((category) => (
-                            <label
+                            <div
                                 key={category.id}
                                 className="flex items-center cursor-pointer group"
+                                onClick={() => handleCategoryChange(category.id)}
                             >
                                 <input
                                     type="checkbox"
                                     checked={selectedFilters.categoryId === category.id}
-                                    onChange={() => handleCategoryChange(category.id)}
+                                    onChange={(e) => e.stopPropagation()}
                                     className={inputs.checkbox}
                                 />
                                 <span className={`ml-3 ${text.muted} group-hover:text-black transition`}>
                                     {category.name}
                                 </span>
-                            </label>
+                            </div>
+
                         ))}
                     </div>
                 )}

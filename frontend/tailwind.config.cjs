@@ -7,7 +7,7 @@ module.exports = {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Yantramanav', 'sans-serif'],
+                sans: ['Work Sans', 'sans-serif'],
             },
             colors: {
                 primary: {
@@ -28,7 +28,13 @@ module.exports = {
                 },
                 background: {
                     DEFAULT: "#ffffff",
+                    soft: "#fdf9f3",    // Beige suave - warm background
                     dark: "#f9fafb",    // gray-50
+                },
+                warm: {
+                    50: "#fdf9f3",      // Beige muy claro
+                    100: "#f8f3e8",     // Beige claro
+                    200: "#f0e6d5",     // Beige medio
                 },
             },
         },

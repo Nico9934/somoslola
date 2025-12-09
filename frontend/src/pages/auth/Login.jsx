@@ -89,6 +89,17 @@ export default function Login() {
                             >
                                 {loading ? 'Ingresando...' : 'Ingresar'}
                             </button>
+
+                            {/* Forgot Password Link */}
+                            <div className="text-center mt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => navigate('/forgot-password')}
+                                    className="text-sm text-gray-600 hover:text-black transition-colors"
+                                >
+                                    ¿Olvidaste tu contraseña?
+                                </button>
+                            </div>
                         </form>
 
                         {/* 🔧 DEV: Botones de login rápido */}

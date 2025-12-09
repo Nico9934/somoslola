@@ -11,6 +11,13 @@ export const cartService = {
         return data;
     },
 
+    async getSummary(cartId, paymentMethod = 'TRANSFER') {
+        const { data } = await api.get(`/cart/${cartId}/summary`, {
+            params: { paymentMethod }
+        });
+        return data;
+    },
+
     async addItem(cartId, variantId, quantity) {
         const { data } = await api.post(`/cart/${cartId}/items`, { variantId, quantity });
         return data;

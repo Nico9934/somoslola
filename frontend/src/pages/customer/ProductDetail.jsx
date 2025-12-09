@@ -7,8 +7,9 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import PriceDisplay from '../../components/customer/PriceDisplay';
+import StockNotificationModal from '../../components/customer/StockNotificationModal';
 import { toast } from 'react-toastify';
-import { FaShoppingCart, FaBox, FaTag, FaDollarSign } from 'react-icons/fa';
+import { FaShoppingCart, FaBox, FaTag, FaDollarSign, FaBell } from 'react-icons/fa';
 import { text, badges, layout, buttons, products as productStyles } from '../../styles';
 
 export default function ProductDetail() {
@@ -19,6 +20,7 @@ export default function ProductDetail() {
     const [selectedImageIndex, setSelectedImageIndex] = useState(0); // Índice de imagen seleccionada
     const [quantity, setQuantity] = useState(1);
     const [loading, setLoading] = useState(true);
+    const [showNotificationModal, setShowNotificationModal] = useState(false);
     const { addItem } = useCart();
 
     useEffect(() => {
@@ -138,7 +140,7 @@ export default function ProductDetail() {
                     ← Volver
                 </Button>
 
-                <div className="grid md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                     {/* Galería de imágenes */}
                     <div>
                         {(() => {
@@ -148,7 +150,7 @@ export default function ProductDetail() {
                             return images.length > 0 ? (
                                 <div className="space-y-4">
                                     {/* Imagen principal */}
-                                    <div className="bg-gray-100 rounded-lg overflow-hidden aspect-square max-w-md mx-auto">
+                                    <div className="bg-gray-100 rounded-none overflow-hidden aspect-square w-full">
                                         <img
                                             src={currentImage}
                                             alt={product.name}
@@ -162,8 +164,8 @@ export default function ProductDetail() {
                                                 <div
                                                     key={idx}
                                                     onClick={() => setSelectedImageIndex(idx)}
-                                                    className={`bg-gray-100 rounded-lg overflow-hidden aspect-square cursor-pointer transition-all ${selectedImageIndex === idx
-                                                        ? 'ring-2 ring-secondary'
+                                                    className={`bg-gray-100 rounded-none overflow-hidden aspect-square cursor-pointer transition-all ${selectedImageIndex === idx
+                                                        ? 'ring-2 ring-black'
                                                         : 'hover:ring-2 hover:ring-gray-300'
                                                         }`}
                                                 >
@@ -178,7 +180,7 @@ export default function ProductDetail() {
                                     )}
                                 </div>
                             ) : (
-                                <div className="bg-gray-200 rounded-lg h-96 flex items-center justify-center">
+                                <div className="bg-gray-200 rounded-none h-64 lg:h-96 flex items-center justify-center">
                                     <p className={text.muted}>Sin imagen</p>
                                 </div>
                             );
@@ -239,20 +241,22 @@ export default function ProductDetail() {
                         {product.variants && product.variants.length > 0 && (
                             <Card variant="bordered" className="mb-6">
                                 <h3 className={`${text.label} mb-4 flex items-center gap-2`}>
-                                    <FaBox /> Variantes disponibles
+                                    <FaBox /> VARIANTES DISPONIBLES
                                 </h3>
-                                <div className="overflow-x-auto">
+
+                                {/* Tabla en desktop */}
+                                <div className="hidden lg:block overflow-x-auto">
                                     <table className="w-full text-sm">
-                                        <thead className="bg-gray-50 border-b-2 border-gray-200">
+                                        <thead className="bg-warm-50 border-b border-gray-200">
                                             <tr>
-                                                <th className="px-4 py-3 text-left font-semibold text-gray-700">SKU</th>
-                                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Atributos</th>
-                                                <th className="px-4 py-3 text-right font-semibold text-gray-700">Precio</th>
-                                                <th className="px-4 py-3 text-center font-semibold text-gray-700">Stock</th>
-                                                <th className="px-4 py-3 text-center font-semibold text-gray-700">Acción</th>
+                                                <th className="px-4 py-3 text-left font-semibold text-gray-800 uppercase text-xs tracking-wide">SKU</th>
+                                                <th className="px-4 py-3 text-left font-semibold text-gray-800 uppercase text-xs tracking-wide">Atributos</th>
+                                                <th className="px-4 py-3 text-right font-semibold text-gray-800 uppercase text-xs tracking-wide">Precio</th>
+                                                {/* <th className="px-4 py-3 text-center font-semibold text-gray-800 uppercase text-xs tracking-wide">Stock</th> */}
+                                                <th className="px-4 py-3 text-center font-semibold text-gray-800 uppercase text-xs tracking-wide">Acción</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-gray-100">
+                                        <tbody className="divide-y divide-gray-200">
                                             {product.variants.map((variant) => {
                                                 const hasStock = variant.stock?.quantity > 0;
                                                 const isSelected = selectedVariant?.id === variant.id;
@@ -261,7 +265,7 @@ export default function ProductDetail() {
                                                 return (
                                                     <tr
                                                         key={variant.id}
-                                                        className={`hover:bg-gray-50 transition-colors ${isSelected ? 'bg-secondary bg-opacity-10' : ''}`}
+                                                        className={`transition-colors ${isSelected ? 'bg-warm-50' : 'hover:bg-gray-50'}`}
                                                     >
                                                         {/* SKU */}
                                                         <td className="px-4 py-3">
@@ -338,7 +342,7 @@ export default function ProductDetail() {
                                                         </td>
 
                                                         {/* Stock */}
-                                                        <td className="px-4 py-3 text-center">
+                                                        {/* <td className="px-4 py-3 text-center">
                                                             <div className="flex flex-col items-center">
                                                                 <span className={`font-semibold ${hasStock ? 'text-green-600' : 'text-red-500'}`}>
                                                                     {variant.stock?.quantity || 0}
@@ -347,24 +351,156 @@ export default function ProductDetail() {
                                                                     {hasStock ? 'disponibles' : 'sin stock'}
                                                                 </span>
                                                             </div>
-                                                        </td>
+                                                        </td> */}
 
                                                         {/* Acción */}
                                                         <td className="px-4 py-3 text-center">
-                                                            <Button
-                                                                onClick={() => setSelectedVariant(variant)}
-                                                                disabled={!hasStock}
-                                                                variant={isSelected ? 'primary' : 'outline'}
-                                                                size="sm"
-                                                            >
-                                                                {isSelected ? 'Seleccionado ✓' : 'Seleccionar'}
-                                                            </Button>
+                                                            {hasStock ? (
+                                                                <Button
+                                                                    onClick={() => setSelectedVariant(variant)}
+                                                                    variant={isSelected ? 'primary' : 'outline'}
+                                                                    size="sm"
+                                                                    className="min-w-[120px]"
+                                                                >
+                                                                    {isSelected ? (
+                                                                        <span className="flex items-center justify-center gap-1.5">
+                                                                            Seleccionado
+                                                                            <span className="text-lg leading-none">✓</span>
+                                                                        </span>
+                                                                    ) : (
+                                                                        'Seleccionar'
+                                                                    )}
+                                                                </Button>
+                                                            ) : (
+                                                                <Button
+                                                                    onClick={() => {
+                                                                        setSelectedVariant(variant);
+                                                                        setShowNotificationModal(true);
+                                                                    }}
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="min-w-[120px] flex items-center justify-center gap-1"
+                                                                >
+                                                                    <FaBell size={12} />
+                                                                    Avisame
+                                                                </Button>
+                                                            )}
                                                         </td>
                                                     </tr>
                                                 );
                                             })}
                                         </tbody>
                                     </table>
+                                </div>
+
+                                {/* Cards en mobile */}
+                                <div className="lg:hidden space-y-3">
+                                    {product.variants.map((variant) => {
+                                        const hasStock = variant.stock?.quantity > 0;
+                                        const isSelected = selectedVariant?.id === variant.id;
+                                        const hasPromotion = variant.promotionPrice && variant.promotionPrice > 0;
+
+                                        return (
+                                            <div
+                                                key={variant.id}
+                                                className={`border rounded-none p-4 transition-colors ${isSelected ? 'border-black bg-warm-50' : 'border-gray-200'
+                                                    }`}
+                                            >
+                                                {/* SKU */}
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <FaTag className="text-gray-400 text-sm" />
+                                                    <span className="font-mono font-semibold text-sm text-gray-800">
+                                                        {variant.sku}
+                                                    </span>
+                                                </div>
+
+                                                {/* Atributos */}
+                                                {variant.attributeValues && variant.attributeValues.length > 0 && (
+                                                    <div className="flex flex-wrap gap-2 mb-3">
+                                                        {variant.attributeValues.map((av) => {
+                                                            const attrValue = av.attributeValue;
+                                                            if (attrValue.hexColor) {
+                                                                return (
+                                                                    <div
+                                                                        key={av.id}
+                                                                        className="flex items-center gap-1.5 bg-gray-100 px-2 py-1 rounded-none"
+                                                                    >
+                                                                        <div
+                                                                            className="w-4 h-4 rounded-full border border-gray-300"
+                                                                            style={{ backgroundColor: attrValue.hexColor }}
+                                                                        />
+                                                                        <span className="text-xs font-medium text-gray-700">
+                                                                            {attrValue.value}
+                                                                        </span>
+                                                                    </div>
+                                                                );
+                                                            }
+                                                            return (
+                                                                <span key={av.id} className={badges.default}>
+                                                                    {attrValue.attribute?.name}: {attrValue.value}
+                                                                </span>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+
+                                                {/* Precio */}
+                                                <div className="mb-3">
+                                                    {hasPromotion ? (
+                                                        <>
+                                                            <p className="text-sm text-gray-500 line-through">
+                                                                ${variant.salePrice.toLocaleString('es-AR')}
+                                                            </p>
+                                                            <p className="text-lg font-bold text-red-600">
+                                                                ${variant.promotionPrice.toLocaleString('es-AR')}
+                                                            </p>
+                                                        </>
+                                                    ) : (
+                                                        <p className="text-lg font-bold text-gray-900">
+                                                            ${variant.salePrice.toLocaleString('es-AR')}
+                                                        </p>
+                                                    )}
+                                                    {variant.paymentOptions?.installmentsActive && variant.installmentPrice && (
+                                                        <p className="text-xs text-blue-600 mt-1">
+                                                            {variant.paymentOptions.installments}x ${variant.installmentPrice.toLocaleString('es-AR')}
+                                                        </p>
+                                                    )}
+                                                </div>
+
+                                                {/* Botón */}
+                                                {hasStock ? (
+                                                    <Button
+                                                        onClick={() => setSelectedVariant(variant)}
+                                                        variant={isSelected ? 'primary' : 'outline'}
+                                                        size="sm"
+                                                        className="w-full"
+                                                    >
+                                                        {isSelected ? (
+                                                            <span className="flex items-center justify-center gap-1.5">
+                                                                Seleccionado
+                                                                <span className="text-lg leading-none">✓</span>
+                                                            </span>
+                                                        ) : (
+                                                            'Seleccionar'
+                                                        )}
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        onClick={() => {
+                                                            setSelectedVariant(variant);
+                                                            setShowNotificationModal(true);
+                                                        }}
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="w-full flex items-center justify-center gap-1"
+                                                    >
+                                                        <FaBell size={12} />
+                                                        Avisame
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </Card>
                         )}
@@ -373,14 +509,16 @@ export default function ProductDetail() {
                             <label className={`block mb-2 ${text.label}`}>
                                 Cantidad:
                             </label>
-                            <input
-                                type="number"
-                                min="1"
-                                max={selectedVariant?.stock?.quantity || 1}
-                                value={quantity}
-                                onChange={(e) => setQuantity(parseInt(e.target.value))}
-                                className="w-24 px-4 py-2 border rounded-lg"
-                            />
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max={selectedVariant?.stock?.quantity || 1}
+                                    value={quantity}
+                                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                    className="w-20 px-3 py-2 border border-gray-200 rounded-none text-center focus:outline-none focus:ring-1 focus:ring-black"
+                                />
+                            </div>
                         </div>
 
                         {/* Resumen de compra */}
@@ -451,9 +589,31 @@ export default function ProductDetail() {
                             <FaShoppingCart className="mr-2" />
                             {selectedVariant?.stock?.quantity === 0 ? 'Sin stock' : 'Agregar al carrito'}
                         </Button>
+
+                        {/* Botón de notificación cuando no hay stock */}
+                        {selectedVariant?.stock?.quantity === 0 && (
+                            <Button
+                                onClick={() => setShowNotificationModal(true)}
+                                variant="outline"
+                                className={`${buttons.full} flex items-center justify-center mt-3`}
+                                size="lg"
+                            >
+                                <FaBell className="mr-2" />
+                                Avisame cuando esté disponible
+                            </Button>
+                        )}
                     </div>
                 </div>
             </div>
+
+            {/* Modal de notificación */}
+            {showNotificationModal && selectedVariant && (
+                <StockNotificationModal
+                    variant={selectedVariant}
+                    product={product}
+                    onClose={() => setShowNotificationModal(false)}
+                />
+            )}
         </Layout>
     );
 }

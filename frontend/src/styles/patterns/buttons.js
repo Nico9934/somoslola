@@ -1,19 +1,19 @@
 /**
- * BUTTONS - Patrones de botones
+ * BUTTONS - Patrones de botones minimalistas
  */
 
 export const buttons = {
-    // Botón primario - Negro sólido
-    primary: "px-6 py-3 bg-black text-white font-medium hover:bg-gray-800 transition-colors",
+    // Botón primario - Negro sólido con bordes cuadrados, hover con borde
+    primary: "px-6 py-3 bg-black text-white font-medium rounded-none hover:bg-warm-50 hover:text-black hover:border hover:border-black transition-all duration-400",
 
-    // Botón secundario - Borde negro
-    secondary: "px-6 py-3 border-2 border-black text-black font-medium hover:bg-black hover:text-white transition-colors",
+    // Botón secundario - Borde con fondo cálido en hover
+    secondary: "px-6 py-3 border-2 border-gray-300 text-gray-700 font-medium rounded-none hover:border-black hover:bg-warm-50 transition-all duration-300",
 
-    // Botón outline - Borde gris
-    outline: "px-4 py-2 border border-gray-300 text-gray-700 hover:border-black hover:text-black transition-colors",
+    // Botón outline - Borde sutil
+    outline: "px-4 py-2 border border-gray-200 text-gray-600 rounded-none hover:border-black hover:bg-warm-50 transition-all duration-300",
 
     // Link estilizado
-    link: "text-black underline font-medium hover:no-underline",
+    link: "text-gray-700 underline font-medium hover:text-gray-900 hover:no-underline transition-colors",
 
     // Variantes de tamaño
     sm: "px-4 py-2 text-sm",

@@ -8,22 +8,45 @@
  */
 
 // === PATTERNS ===
-export { buttons } from './patterns/buttons.js';
-export { cards } from './patterns/cards.js';
-export { inputs } from './patterns/inputs.js';
-export { layout } from './patterns/layout.js';
-export { text } from './patterns/text.js';
-export { alerts } from './patterns/alerts.js';
-export { products } from './patterns/products.js';
-export { upload } from './patterns/upload.js';
-export { badges } from './patterns/badges.js';
-export { icons } from './patterns/icons.js';
+// Importar todos de una vez para mejor tree-shaking
+import { buttons } from './patterns/buttons.js';
+import { cards } from './patterns/cards.js';
+import { inputs } from './patterns/inputs.js';
+import { layout } from './patterns/layout.js';
+import { text } from './patterns/text.js';
+import { alerts } from './patterns/alerts.js';
+import { products } from './patterns/products.js';
+import { upload } from './patterns/upload.js';
+import { badges } from './patterns/badges.js';
+import { icons } from './patterns/icons.js';
 
 // === COMPONENTS ===
-export { orderSummary } from './components/orderSummary.js';
-export { successHeader } from './components/successHeader.js';
-export { infoCard } from './components/infoCard.js';
-export { actionFooter } from './components/actionFooter.js';
+import { orderSummary } from './components/orderSummary.js';
+import { successHeader } from './components/successHeader.js';
+import { infoCard } from './components/infoCard.js';
+import { actionFooter } from './components/actionFooter.js';
 
 // === STATES ===
-export { states } from './states.js';
+import { states } from './states.js';
+
+// Export como objeto único para mejor bundling
+export {
+    // Patterns
+    buttons,
+    cards,
+    inputs,
+    layout,
+    text,
+    alerts,
+    products,
+    upload,
+    badges,
+    icons,
+    // Components
+    orderSummary,
+    successHeader,
+    infoCard,
+    actionFooter,
+    // States
+    states
+};

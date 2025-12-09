@@ -49,6 +49,11 @@ export default function ProductFormUnified() {
     const [attributes, setAttributes] = useState([]);
     const [uploadingVariantIndex, setUploadingVariantIndex] = useState(null);
 
+    // Modal para agregar imagen por URL
+    const [showUrlModal, setShowUrlModal] = useState(false);
+    const [urlModalVariantIndex, setUrlModalVariantIndex] = useState(null);
+    const [imageUrl, setImageUrl] = useState('');
+
     // 📷 Upload de imágenes por variante (mismo sistema que imágenes generales)
     const handleVariantImageUpload = async (variantIndex, files) => {
         const fileArray = Array.from(files);
@@ -88,13 +93,50 @@ export default function ProductFormUnified() {
         }
     };
 
+    // 🔗 Abrir modal para agregar imagen por URL
+    const openUrlModal = (variantIndex) => {
+        setUrlModalVariantIndex(variantIndex);
+        setImageUrl('');
+        setShowUrlModal(true);
+    };
+
+    // 🔗 Agregar imagen por URL a variante
+    const handleVariantImageByUrl = () => {
+        if (!imageUrl || !imageUrl.trim()) {
+            alert('Ingrese una URL válida');
+            return;
+        }
+
+        const currentImages = variants[urlModalVariantIndex].images || [];
+        if (currentImages.length >= 5) {
+            alert('Máximo 5 imágenes por variante');
+            setShowUrlModal(false);
+            return;
+        }
+
+        const newVariants = [...variants];
+        newVariants[urlModalVariantIndex].images = [
+            ...currentImages,
+            {
+                url: imageUrl.trim(),
+                publicId: null // URL externa, no tiene publicId de Cloudinary
+            }
+        ];
+        setVariants(newVariants);
+        setShowUrlModal(false);
+        setImageUrl('');
+    };
+
     const removeVariantImage = async (variantIndex, imageIndex) => {
         const imageToRemove = variants[variantIndex].images[imageIndex];
 
         try {
-            await api.delete('/upload/delete-image', {
-                data: { publicId: imageToRemove.publicId }
-            });
+            // Solo eliminar de Cloudinary si tiene publicId (no es URL externa)
+            if (imageToRemove.publicId) {
+                await api.delete('/upload/delete-image', {
+                    data: { publicId: imageToRemove.publicId }
+                });
+            }
 
             const newVariants = [...variants];
             newVariants[variantIndex].images.splice(imageIndex, 1);
@@ -976,53 +1018,67 @@ export default function ProductFormUnified() {
 
                                             {/* Imágenes */}
                                             <div>
-                                                <label className="block text-xs font-medium text-gray-700 mb-2">Imágenes</label>
-                                                <div className="flex items-start gap-3">
-                                                    <div
-                                                        className="w-16 h-16 border-2 border-dashed border-secondary rounded-lg flex flex-col items-center justify-center text-secondary text-[10px] cursor-pointer hover:bg-secondary/10 transition-all flex-shrink-0"
+                                                <label className="block text-xs font-medium text-gray-700 mb-2">Imágenes (máx. 5)</label>
+
+                                                {/* Botones de upload y URL */}
+                                                <div className="flex gap-2 mb-2">
+                                                    <button
+                                                        type="button"
                                                         onClick={() => document.getElementById(`variant-file-mobile-${index}`).click()}
+                                                        disabled={uploadingVariantIndex === index || (variant.images?.length || 0) >= 5}
+                                                        className="flex-1 px-3 py-2 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                     >
-                                                        <input
-                                                            id={`variant-file-mobile-${index}`}
-                                                            type="file"
-                                                            accept="image/*"
-                                                            multiple
-                                                            className="hidden"
-                                                            disabled={uploadingVariantIndex === index}
-                                                            onChange={(e) => handleVariantImageUpload(index, e.target.files)}
-                                                        />
-                                                        {uploadingVariantIndex === index ? (
-                                                            <span className="animate-spin text-lg">⌛</span>
-                                                        ) : (
-                                                            <>
-                                                                <span className="text-2xl leading-none font-light">+</span>
-                                                                <span className="text-[9px] opacity-60 mt-1">
-                                                                    {variant.images?.length || 0}/5
-                                                                </span>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                    {variant.images && variant.images.length > 0 && (
-                                                        <div className="flex gap-2 overflow-x-auto flex-1">
-                                                            {variant.images.map((img, imgIdx) => (
-                                                                <div key={imgIdx} className="relative group flex-shrink-0">
-                                                                    <img
-                                                                        src={img.url}
-                                                                        alt={`Img ${imgIdx + 1}`}
-                                                                        className="w-16 h-16 object-contain rounded-lg border-2 border-gray-200"
-                                                                    />
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => removeVariantImage(index, imgIdx)}
-                                                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-sm font-bold"
-                                                                    >
-                                                                        ×
-                                                                    </button>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
+                                                        {uploadingVariantIndex === index ? '⌛ Subiendo...' : '📁 Archivo'}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            openUrlModal(index);
+                                                        }}
+                                                        disabled={(variant.images?.length || 0) >= 5}
+                                                        className="flex-1 px-3 py-2 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        🔗 URL
+                                                    </button>
                                                 </div>
+
+                                                <input
+                                                    id={`variant-file-mobile-${index}`}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    multiple
+                                                    className="hidden"
+                                                    disabled={uploadingVariantIndex === index}
+                                                    onChange={(e) => handleVariantImageUpload(index, e.target.files)}
+                                                />
+
+                                                {/* Preview de imágenes */}
+                                                {variant.images && variant.images.length > 0 && (
+                                                    <div className="flex gap-2 overflow-x-auto pb-1">
+                                                        {variant.images.map((img, imgIdx) => (
+                                                            <div key={imgIdx} className="relative group flex-shrink-0">
+                                                                <img
+                                                                    src={img.url}
+                                                                    alt={`Img ${imgIdx + 1}`}
+                                                                    className="w-16 h-16 object-contain rounded-lg border-2 border-gray-200"
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeVariantImage(index, imgIdx)}
+                                                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-sm font-bold"
+                                                                >
+                                                                    ×
+                                                                </button>
+                                                                {/* Indicador si es URL externa */}
+                                                                {!img.publicId && (
+                                                                    <div className="absolute bottom-0 left-0 right-0 bg-blue-500/90 text-white text-[8px] text-center py-0.5 rounded-b-lg">
+                                                                        URL
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     );
@@ -1154,41 +1210,42 @@ export default function ProductFormUnified() {
                                                         </span>
                                                     </td>
                                                     <td className="px-4 py-3">
-                                                        <div className="flex items-start gap-3 min-w-[200px]">
-                                                            <div
-                                                                className="w-16 h-16 border-2 border-dashed border-secondary rounded-lg flex flex-col items-center justify-center text-secondary text-[10px] cursor-pointer hover:bg-secondary/10 transition-all flex-shrink-0"
-                                                                onClick={() => document.getElementById(`variant-file-${index}`).click()}
-                                                                onDragOver={(e) => e.preventDefault()}
-                                                                onDrop={(e) => {
-                                                                    e.preventDefault();
-                                                                    const files = e.dataTransfer.files;
-                                                                    if (files.length > 0) {
-                                                                        handleVariantImageUpload(index, files);
-                                                                    }
-                                                                }}
-                                                            >
-                                                                <input
-                                                                    id={`variant-file-${index}`}
-                                                                    type="file"
-                                                                    accept="image/*"
-                                                                    multiple
-                                                                    className="hidden"
-                                                                    disabled={uploadingVariantIndex === index}
-                                                                    onChange={(e) => handleVariantImageUpload(index, e.target.files)}
-                                                                />
-                                                                {uploadingVariantIndex === index ? (
-                                                                    <span className="animate-spin text-lg">⌛</span>
-                                                                ) : (
-                                                                    <>
-                                                                        <span className="text-2xl leading-none font-light">+</span>
-                                                                        <span className="text-[9px] opacity-60 mt-1">
-                                                                            {variant.images?.length || 0}/5
-                                                                        </span>
-                                                                    </>
-                                                                )}
+                                                        <div className="space-y-2 min-w-[220px]">
+                                                            {/* Botones de upload y URL */}
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => document.getElementById(`variant-file-${index}`).click()}
+                                                                    disabled={uploadingVariantIndex === index || (variant.images?.length || 0) >= 5}
+                                                                    className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                >
+                                                                    {uploadingVariantIndex === index ? '⌛ Subiendo...' : '📁 Archivo'}
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        openUrlModal(index);
+                                                                    }}
+                                                                    disabled={(variant.images?.length || 0) >= 5}
+                                                                    className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                >
+                                                                    🔗 URL
+                                                                </button>
                                                             </div>
+
+                                                            <input
+                                                                id={`variant-file-${index}`}
+                                                                type="file"
+                                                                accept="image/*"
+                                                                multiple
+                                                                className="hidden"
+                                                                disabled={uploadingVariantIndex === index}
+                                                                onChange={(e) => handleVariantImageUpload(index, e.target.files)}
+                                                            />
+
+                                                            {/* Preview de imágenes */}
                                                             {variant.images && variant.images.length > 0 && (
-                                                                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 max-w-[300px]">
+                                                                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                                                                     {variant.images.map((img, imgIdx) => (
                                                                         <div key={imgIdx} className="relative group flex-shrink-0">
                                                                             <img
@@ -1204,6 +1261,12 @@ export default function ProductFormUnified() {
                                                                             >
                                                                                 ×
                                                                             </button>
+                                                                            {/* Indicador si es URL externa */}
+                                                                            {!img.publicId && (
+                                                                                <div className="absolute bottom-0 left-0 right-0 bg-blue-500/90 text-white text-[8px] text-center py-0.5 rounded-b-lg">
+                                                                                    URL
+                                                                                </div>
+                                                                            )}
                                                                         </div>
                                                                     ))}
                                                                 </div>
@@ -1234,7 +1297,8 @@ export default function ProductFormUnified() {
                                 💡 Los campos marcados con * son obligatorios. El margen se calcula automáticamente: (Precio Venta - Costo) / Costo × 100
                             </p>
                         </Card>
-                    )}
+                    )
+                    }
 
                     {/* ========== BOTONES DE ACCIÓN ========== */}
                     <div className="flex justify-end gap-4 pt-4">
@@ -1252,8 +1316,85 @@ export default function ProductFormUnified() {
                             {isEditing ? '✓ Guardar Cambios' : '✓ Crear Producto'}
                         </Button>
                     </div>
-                </div>
-            </div>
-        </AdminLayout>
+                </div >
+            </div >
+
+            {/* Modal para agregar imagen por URL */}
+            {showUrlModal && (
+                <>
+                    {/* Backdrop */}
+                    <div
+                        className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+                        onClick={() => setShowUrlModal(false)}
+                    >
+                        {/* Modal */}
+                        <div
+                            className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <h3 className="text-lg font-semibold mb-4">Agregar imagen por URL</h3>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        URL de la imagen
+                                    </label>
+                                    <input
+                                        type="url"
+                                        value={imageUrl}
+                                        onChange={(e) => setImageUrl(e.target.value)}
+                                        placeholder="https://ejemplo.com/imagen.jpg"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                                        autoFocus
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter') {
+                                                handleVariantImageByUrl();
+                                            }
+                                        }}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Ingrese la URL completa de la imagen (debe comenzar con http:// o https://)
+                                    </p>
+                                </div>
+
+                                {/* Preview si hay URL */}
+                                {imageUrl && (
+                                    <div className="border border-gray-200 rounded-lg p-2">
+                                        <p className="text-xs text-gray-600 mb-2">Vista previa:</p>
+                                        <img
+                                            src={imageUrl}
+                                            alt="Preview"
+                                            className="w-full h-32 object-cover rounded"
+                                            onError={(e) => {
+                                                e.target.src = '';
+                                                e.target.alt = 'Error al cargar imagen';
+                                                e.target.className = 'w-full h-32 flex items-center justify-center bg-gray-100 rounded text-gray-400 text-sm';
+                                            }}
+                                        />
+                                    </div>
+                                )}
+
+                                <div className="flex gap-3 pt-4">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setShowUrlModal(false)}
+                                        className="flex-1"
+                                    >
+                                        Cancelar
+                                    </Button>
+                                    <Button
+                                        onClick={handleVariantImageByUrl}
+                                        className="flex-1"
+                                        disabled={!imageUrl.trim()}
+                                    >
+                                        Agregar
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+        </AdminLayout >
     );
 }

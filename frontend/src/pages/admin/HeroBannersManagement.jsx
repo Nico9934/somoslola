@@ -215,7 +215,7 @@ export default function HeroBannersManagement() {
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium mb-1">
-                                    Imagen * <span className="text-xs text-gray-500">(Recomendado: 1920x600px)</span>
+                                    Título (opcional)
                                 </label>
                                 <input
                                     type="text"
@@ -223,8 +223,8 @@ export default function HeroBannersManagement() {
                                     value={formData.title}
                                     onChange={handleChange}
                                     placeholder="NUEVA COLECCIÓN"
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                    required
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={uploadingImage}
                                 />
                             </div>
 
@@ -236,7 +236,8 @@ export default function HeroBannersManagement() {
                                     value={formData.subtitle}
                                     onChange={handleChange}
                                     placeholder="Descubre las últimas tendencias"
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={uploadingImage}
                                 />
                             </div>
 
@@ -248,16 +249,32 @@ export default function HeroBannersManagement() {
                                     type="file"
                                     accept="image/*"
                                     onChange={handleImageUpload}
-                                    className="w-full px-3 py-2 border rounded-lg"
+                                    className="w-full px-3 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled={uploadingImage}
                                 />
-                                {uploadingImage && <p className="text-sm text-gray-500 mt-1">Subiendo...</p>}
-                                {formData.imageUrl && (
-                                    <img
-                                        src={formData.imageUrl}
-                                        alt="Preview"
-                                        className="mt-2 h-32 w-full object-cover rounded"
-                                    />
+                                {uploadingImage && (
+                                    <div className="mt-3 flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                                        <div>
+                                            <p className="text-sm font-medium text-blue-900">Subiendo imagen...</p>
+                                            <p className="text-xs text-blue-600">Por favor, espera mientras se procesa la imagen</p>
+                                        </div>
+                                    </div>
+                                )}
+                                {formData.imageUrl && !uploadingImage && (
+                                    <div className="mt-3">
+                                        <img
+                                            src={formData.imageUrl}
+                                            alt="Preview"
+                                            className="h-32 w-full object-cover rounded border-2 border-green-500"
+                                        />
+                                        <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                            </svg>
+                                            Imagen cargada correctamente
+                                        </p>
+                                    </div>
                                 )}
                             </div>
 
@@ -269,7 +286,8 @@ export default function HeroBannersManagement() {
                                     value={formData.link}
                                     onChange={handleChange}
                                     placeholder="/products?category=nueva-coleccion"
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={uploadingImage}
                                 />
                             </div>
 
@@ -279,16 +297,24 @@ export default function HeroBannersManagement() {
                                     name="isActive"
                                     checked={formData.isActive}
                                     onChange={handleChange}
-                                    className="w-4 h-4"
+                                    className="w-4 h-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={uploadingImage}
                                 />
                                 <label className="text-sm font-medium">Banner activo</label>
                             </div>
 
                             <div className="flex gap-3 pt-2">
-                                <Button type="submit" disabled={uploadingImage}>
-                                    {editingBanner ? 'Actualizar' : 'Crear'}
+                                <Button type="submit" disabled={uploadingImage || !formData.imageUrl}>
+                                    {uploadingImage ? (
+                                        <span className="flex items-center gap-2">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                            Subiendo...
+                                        </span>
+                                    ) : (
+                                        editingBanner ? 'Actualizar' : 'Crear'
+                                    )}
                                 </Button>
-                                <Button type="button" variant="outline" onClick={handleCancel}>
+                                <Button type="button" variant="outline" onClick={handleCancel} disabled={uploadingImage}>
                                     Cancelar
                                 </Button>
                             </div>
@@ -305,18 +331,19 @@ export default function HeroBannersManagement() {
                     ) : (
                         banners.map((banner, index) => (
                             <Card key={banner.id}>
-                                <div className="flex gap-4">
+                                {/* Layout Desktop */}
+                                <div className="hidden md:flex gap-4 items-center">
                                     <img
                                         src={banner.imageUrl}
                                         alt={banner.title}
-                                        className="w-32 h-20 object-cover rounded"
+                                        className="w-40 h-24 object-cover rounded flex-shrink-0"
                                     />
-                                    <div className="flex-1">
-                                        <h3 className="font-semibold text-lg">{banner.title}</h3>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-semibold text-lg truncate">{banner.title || 'Sin título'}</h3>
                                         {banner.subtitle && (
-                                            <p className="text-sm text-gray-600">{banner.subtitle}</p>
+                                            <p className="text-sm text-gray-600 truncate">{banner.subtitle}</p>
                                         )}
-                                        <div className="flex gap-2 mt-2">
+                                        <div className="flex gap-2 mt-2 flex-wrap">
                                             <span className={`text-xs px-2 py-1 rounded ${banner.isActive
                                                 ? 'bg-green-100 text-green-800'
                                                 : 'bg-gray-100 text-gray-800'
@@ -328,48 +355,124 @@ export default function HeroBannersManagement() {
                                             </span>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col gap-2">
-                                        <div className="flex gap-1">
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => handleReorder(banner.id, 'up')}
-                                                disabled={index === 0}
-                                            >
-                                                <ArrowUp className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => handleReorder(banner.id, 'down')}
-                                                disabled={index === banners.length - 1}
-                                            >
-                                                <ArrowDown className="w-4 h-4" />
-                                            </Button>
+                                    <div className="flex gap-2 flex-shrink-0">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleReorder(banner.id, 'up')}
+                                            disabled={index === 0}
+                                            title="Subir"
+                                        >
+                                            <ArrowUp className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleReorder(banner.id, 'down')}
+                                            disabled={index === banners.length - 1}
+                                            title="Bajar"
+                                        >
+                                            <ArrowDown className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleToggleActive(banner)}
+                                            title={banner.isActive ? 'Desactivar' : 'Activar'}
+                                        >
+                                            {banner.isActive ? '👁️' : '🚫'}
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleEdit(banner)}
+                                            title="Editar"
+                                        >
+                                            ✏️
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="danger"
+                                            onClick={() => handleDelete(banner.id)}
+                                            title="Eliminar"
+                                        >
+                                            🗑️
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                {/* Layout Mobile */}
+                                <div className="md:hidden space-y-3">
+                                    {/* Imagen */}
+                                    <img
+                                        src={banner.imageUrl}
+                                        alt={banner.title}
+                                        className="w-full h-32 object-cover rounded"
+                                    />
+
+                                    {/* Información */}
+                                    <div>
+                                        <h3 className="font-semibold text-base">{banner.title || 'Sin título'}</h3>
+                                        {banner.subtitle && (
+                                            <p className="text-sm text-gray-600 mt-1">{banner.subtitle}</p>
+                                        )}
+                                        <div className="flex gap-2 mt-2 flex-wrap">
+                                            <span className={`text-xs px-2 py-1 rounded ${banner.isActive
+                                                ? 'bg-green-100 text-green-800'
+                                                : 'bg-gray-100 text-gray-800'
+                                                }`}>
+                                                {banner.isActive ? 'Activo' : 'Inactivo'}
+                                            </span>
+                                            <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">
+                                                Orden: {banner.order}
+                                            </span>
                                         </div>
-                                        <div className="flex gap-1">
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => handleToggleActive(banner)}
-                                            >
-                                                {banner.isActive ? '👁️' : '🚫'}
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => handleEdit(banner)}
-                                            >
-                                                ✏️
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="danger"
-                                                onClick={() => handleDelete(banner.id)}
-                                            >
-                                                🗑️
-                                            </Button>
-                                        </div>
+                                    </div>
+
+                                    {/* Acciones - Grid de 2 filas en mobile */}
+                                    <div className="grid grid-cols-5 gap-2">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleReorder(banner.id, 'up')}
+                                            disabled={index === 0}
+                                            className="flex items-center justify-center"
+                                        >
+                                            <ArrowUp className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleReorder(banner.id, 'down')}
+                                            disabled={index === banners.length - 1}
+                                            className="flex items-center justify-center"
+                                        >
+                                            <ArrowDown className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleToggleActive(banner)}
+                                            className="flex items-center justify-center"
+                                        >
+                                            {banner.isActive ? '👁️' : '🚫'}
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleEdit(banner)}
+                                            className="flex items-center justify-center"
+                                        >
+                                            ✏️
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="danger"
+                                            onClick={() => handleDelete(banner.id)}
+                                            className="flex items-center justify-center"
+                                        >
+                                            🗑️
+                                        </Button>
                                     </div>
                                 </div>
                             </Card>

@@ -3,17 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { ordersService } from '../../api/orders';
+import { cartService } from '../../api/cart';
 import Layout from '../../components/ui/Layout';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import MercadoPagoForm from '../../components/customer/MercadoPagoForm';
 import { toast } from 'react-toastify';
-import { text, badges, layout, buttons, inputs, alerts } from '../../styles';
+import { text, inputs } from '../../styles';
 import { orderSummary } from '../../styles/components';
 
 export default function Checkout() {
-    const { cart, clearCart, loadCart } = useCart();
+    const { cart, clearCart, loading: cartLoading } = useCart();
     const { user } = useAuth();
     const navigate = useNavigate();
 
@@ -21,7 +22,8 @@ export default function Checkout() {
     const [loading, setLoading] = useState(false);
     const [calculatingShipping, setCalculatingShipping] = useState(false);
     const [processingPayment, setProcessingPayment] = useState(false);
-    const [orderCompleted, setOrderCompleted] = useState(false); // Nueva bandera
+    const [orderCompleted, setOrderCompleted] = useState(false);
+    const [cartSummary, setCartSummary] = useState(null); // Resumen del carrito desde backend
 
     // Datos del formulario
     const [formData, setFormData] = useState({
@@ -37,19 +39,48 @@ export default function Checkout() {
         shippingCost: 0,
 
         // Paso 2: Método de pago
-        paymentMethod: 'TRANSFER', // CARD o TRANSFER (por defecto transferencia)
+        paymentMethod: null, // Sin método preseleccionado
     });
 
     useEffect(() => {
         // Redirigir si no hay carrito o está vacío (pero NO si ya se completó la orden)
-        if (!orderCompleted && (!cart || cart.items?.length === 0)) {
+        // IMPORTANTE: Solo validar después de que el carrito termine de cargar
+        if (!cartLoading && !orderCompleted && (!cart || cart.items?.length === 0)) {
             toast.warning('Tu carrito está vacío');
             navigate('/products');
         }
-    }, [cart, navigate, orderCompleted]);
+    }, [cart, cartLoading, navigate, orderCompleted]);
+
+    // Cargar resumen del carrito desde backend cuando cambia el método de pago
+    useEffect(() => {
+        const loadCartSummary = async () => {
+            // Solo cargar resumen con método de pago si estamos en paso 2 o superior
+            if (cart?.id && currentStep >= 2) {
+                try {
+                    const summary = await cartService.getSummary(cart.id, formData.paymentMethod);
+                    console.log('📊 Cart Summary loaded:', summary);
+                    console.log('💰 Pricing:', summary?.pricing);
+                    setCartSummary(summary);
+                } catch (error) {
+                    console.error('Error loading cart summary:', error);
+                }
+            }
+        };
+        loadCartSummary();
+    }, [cart?.id, formData.paymentMethod, currentStep]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+
+        // Validar si se intenta seleccionar tarjeta pero no está habilitada
+        if (name === 'paymentMethod' && value === 'CARD') {
+            // Verificar si las cuotas están activas en el backend
+            if (cartSummary?.paymentSettings?.installmentsActive === false) {
+                toast.warning('El pago con tarjeta no está disponible por el momento');
+                return; // No permitir el cambio
+            }
+        }
+
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
@@ -88,8 +119,19 @@ export default function Checkout() {
         return true;
     };
 
+    const validateStep2 = () => {
+        if (!formData.paymentMethod) {
+            toast.error('Por favor selecciona un método de pago');
+            return false;
+        }
+        return true;
+    };
+
     const handleNextStep = () => {
         if (currentStep === 1 && !validateStep1()) {
+            return;
+        }
+        if (currentStep === 2 && !validateStep2()) {
             return;
         }
         setCurrentStep(prev => prev + 1);
@@ -225,13 +267,31 @@ export default function Checkout() {
         toast.error('Error al cargar el formulario de pago');
     };
 
-    const calculateSubtotal = () => {
+    // Calcular subtotal base (sin descuentos de método de pago)
+    const calculateBaseSubtotal = () => {
         if (!cart?.items) return 0;
-        const subtotal = cart.items.reduce((sum, item) => {
+        return cart.items.reduce((sum, item) => {
             const price = item.variant?.promotionPrice || item.variant?.salePrice || 0;
             return sum + (price * item.quantity);
         }, 0);
-        return subtotal;
+    };
+
+    // Calcular subtotal final (con descuento si aplica)
+    const calculateSubtotal = () => {
+        const baseSubtotal = calculateBaseSubtotal();
+
+        // Solo aplicar descuento de transferencia si:
+        // 1. Estamos en paso 2 o superior
+        // 2. Hay método de pago seleccionado
+        // 3. El método es TRANSFER
+        // 4. Tenemos el resumen del backend
+        if (currentStep >= 2 &&
+            formData.paymentMethod === 'TRANSFER' &&
+            cartSummary?.pricing?.subtotalWithTransferDiscount) {
+            return cartSummary.pricing.subtotalWithTransferDiscount;
+        }
+
+        return baseSubtotal;
     };
 
     const calculateTotal = () => {
@@ -239,6 +299,17 @@ export default function Checkout() {
         const shipping = parseFloat(formData.shippingCost) || 0;
         return subtotal + shipping;
     };
+
+    // Mostrar spinner mientras carga el carrito
+    if (cartLoading) {
+        return (
+            <Layout>
+                <div className="flex justify-center items-center h-64">
+                    <Spinner size="lg" />
+                </div>
+            </Layout>
+        );
+    }
 
     if (!cart || cart.items?.length === 0) {
         return null;
@@ -438,7 +509,11 @@ export default function Checkout() {
                                             </div>
                                         </label>
 
-                                        <label className={`flex items-start p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${formData.paymentMethod === 'CARD' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                                        <label className={`flex items-start p-4 border-2 rounded-lg transition-colors ${cartSummary?.paymentSettings?.installmentsActive === false
+                                                ? 'border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed'
+                                                : formData.paymentMethod === 'CARD'
+                                                    ? 'border-blue-500 bg-blue-50 cursor-pointer hover:bg-gray-50'
+                                                    : 'border-gray-200 cursor-pointer hover:bg-gray-50'
                                             }`}>
                                             <input
                                                 type="radio"
@@ -446,14 +521,26 @@ export default function Checkout() {
                                                 value="CARD"
                                                 checked={formData.paymentMethod === 'CARD'}
                                                 onChange={handleChange}
+                                                disabled={cartSummary?.paymentSettings?.installmentsActive === false}
                                                 className="mt-1 mr-3"
                                             />
                                             <div className="flex-1">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="font-medium">💳 Tarjeta de Crédito/Débito</span>
+                                                    <span className={`font-medium ${cartSummary?.paymentSettings?.installmentsActive === false
+                                                            ? 'text-gray-500'
+                                                            : ''
+                                                        }`}>
+                                                        💳 Tarjeta de Crédito/Débito
+                                                        {cartSummary?.paymentSettings?.installmentsActive === false && (
+                                                            <span className="ml-2 text-xs bg-gray-300 text-gray-700 px-2 py-1 rounded">No disponible</span>
+                                                        )}
+                                                    </span>
                                                 </div>
                                                 <p className="text-sm text-gray-600 mt-1">
-                                                    Paga de forma segura con tu tarjeta
+                                                    {cartSummary?.paymentSettings?.installmentsActive === false
+                                                        ? 'Este método de pago no está disponible temporalmente'
+                                                        : 'Paga de forma segura con tu tarjeta'
+                                                    }
                                                 </p>
                                             </div>
                                         </label>
@@ -465,9 +552,9 @@ export default function Checkout() {
                                                 ℹ️ Importante sobre transferencias bancarias:
                                             </p>
                                             <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-                                                <li>Recibirás los datos bancarios por email al confirmar el pedido</li>
+                                                <li>Podrás ver los datos bancarios al finalizar la compra</li>
                                                 <li>El pedido se procesará al recibir el comprobante de pago</li>
-                                                <li>Recordá incluir el número de pedido en el comprobante</li>
+                                                <li>Si la transferencia no se hace un día habil, el pago puede demorar en el impacto</li>
                                             </ul>
                                         </div>
                                     )}
@@ -498,6 +585,11 @@ export default function Checkout() {
                                         {formData.paymentMethod === 'TRANSFER' && (
                                             <Button onClick={handleNextStep}>
                                                 Continuar
+                                            </Button>
+                                        )}
+                                        {!formData.paymentMethod && (
+                                            <Button onClick={handleNextStep} variant="outline" disabled>
+                                                Selecciona un método de pago
                                             </Button>
                                         )}
                                     </div>
@@ -572,18 +664,41 @@ export default function Checkout() {
                             <div className={orderSummary.container}>
                                 <div className={orderSummary.row}>
                                     <span className={orderSummary.label}>Subtotal ({cart.items?.length} items)</span>
-                                    <span className={orderSummary.value}>${calculateSubtotal().toFixed(2)}</span>
+                                    <span className={orderSummary.value}>
+                                        {/* Solo mostrar descuento si estamos en paso 2+ y método es TRANSFER */}
+                                        {currentStep >= 2 && formData.paymentMethod === 'TRANSFER' && cartSummary?.pricing?.subtotalWithTransferDiscount ? (
+                                            <>
+                                                <span className="line-through text-gray-400 mr-2">
+                                                    ${calculateBaseSubtotal().toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </span>
+                                                <span className="text-green-600 font-semibold">
+                                                    ${cartSummary.pricing.subtotalWithTransferDiscount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </span>
+                                            </>
+                                        ) : (
+                                            `$${calculateBaseSubtotal().toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                        )}
+                                    </span>
                                 </div>
+
+                                {/* Badge de descuento solo en paso 2+ con transferencia */}
+                                {currentStep >= 2 && formData.paymentMethod === 'TRANSFER' && cartSummary?.pricing?.transferDiscount > 0 && (
+                                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 my-2">
+                                        <p className="text-sm text-green-800 font-medium">
+                                            🎉 ¡{cartSummary.pricing.transferDiscount}% OFF por transferencia!
+                                        </p>
+                                    </div>
+                                )}
 
                                 <div className={orderSummary.row}>
                                     <span className={orderSummary.label}>Envío</span>
-                                    <span className={orderSummary.value}>${(parseFloat(formData.shippingCost) || 0).toFixed(2)}</span>
+                                    <span className={orderSummary.value}>${(parseFloat(formData.shippingCost) || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </div>
 
                                 <div className={orderSummary.divider}></div>
                                 <div className={orderSummary.totalRow}>
-                                    <span className={orderSummary.totalLabel}>Total</span>
-                                    <span className={orderSummary.totalValue}>${calculateTotal().toFixed(2)}</span>
+                                    <span className={orderSummary.totalLabel}>Total: </span>
+                                    <span className={orderSummary.totalValue}>${calculateTotal().toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </div>
                             </div>
                         </Card>

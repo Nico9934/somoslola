@@ -13,8 +13,8 @@ export default function Button({
         primary: buttons.primary,
         secondary: buttons.secondary,
         outline: buttons.outline,
-        ghost: 'text-black hover:bg-gray-100 transition-colors',
-        danger: 'px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-medium transition-colors',
+        ghost: 'text-black hover:bg-gray-100 transition-colors rounded-none',
+        danger: 'px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-medium transition-colors rounded-none',
     };
 
     // Mapeo de tamaños

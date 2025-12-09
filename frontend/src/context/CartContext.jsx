@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { cartService } from '../api/cart';
 import { useAuth } from './AuthContext';
 
@@ -8,22 +8,6 @@ export const CartProvider = ({ children }) => {
     const [cart, setCart] = useState(null);
     const [loading, setLoading] = useState(false);
     const { user } = useAuth();
-
-    // Cargar carrito inicial desde localStorage
-    useEffect(() => {
-        const cartId = localStorage.getItem('cartId');
-        if (cartId) {
-            loadCart(cartId);
-        }
-    }, []);
-
-    // Recargar carrito cuando el usuario se autentica
-    useEffect(() => {
-        if (user) {
-            // Usuario autenticado - buscar su carrito
-            loadUserCart();
-        }
-    }, [user]);
 
     const loadUserCart = async () => {
         try {
@@ -38,7 +22,7 @@ export const CartProvider = ({ children }) => {
         }
     };
 
-    const loadCart = async (cartId) => {
+    const loadCart = useCallback(async (cartId) => {
         try {
             setLoading(true);
             const data = await cartService.getById(cartId);
@@ -49,7 +33,31 @@ export const CartProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    // Nuevo método para forzar recarga del carrito (útil al abrir el drawer)
+    const refreshCart = useCallback(async () => {
+        const cartId = localStorage.getItem('cartId');
+        if (cartId) {
+            await loadCart(cartId);
+        }
+    }, [loadCart]);
+
+    // Cargar carrito inicial desde localStorage
+    useEffect(() => {
+        const cartId = localStorage.getItem('cartId');
+        if (cartId) {
+            loadCart(cartId);
+        }
+    }, [loadCart]);
+
+    // Recargar carrito cuando el usuario se autentica
+    useEffect(() => {
+        if (user) {
+            // Usuario autenticado - buscar su carrito
+            loadUserCart();
+        }
+    }, [user]);
 
     const createCart = async () => {
         try {
@@ -113,6 +121,7 @@ export const CartProvider = ({ children }) => {
             removeItem,
             clearCart,
             loadCart,
+            refreshCart,
             itemsCount
         }}>
             {children}

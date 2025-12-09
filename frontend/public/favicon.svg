@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Círculo de fondo con color cálido de la marca -->
+  <circle cx="64" cy="64" r="64" fill="#fdf9f3"/>
+  
+  <!-- Círculo interior para dar efecto de borde -->
+  <circle cx="64" cy="64" r="58" fill="#000"/>
+  
+  <!-- Texto "LOLA" centrado -->
+  <text 
+    x="64" 
+    y="74" 
+    font-family="'Work Sans', Arial, sans-serif" 
+    font-size="32" 
+    font-weight="700" 
+    fill="#fdf9f3" 
+    text-anchor="middle"
+    letter-spacing="2">
+    LOLA
+  </text>
+</svg>

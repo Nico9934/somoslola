@@ -4,6 +4,7 @@ import { Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { buttons, text } from '../../styles';
+import { FaShoppingCart } from 'react-icons/fa';
 
 export default function Navbar() {
     const { user, logout, isAdmin } = useAuth();
@@ -17,24 +18,24 @@ export default function Navbar() {
         setIsMobileMenuOpen(false);
     };
 
-    const linkClass = "text-gray-700 hover:text-black transition-colors";
-    const mobileLinkClass = "block py-2 text-gray-700 hover:bg-gray-50 px-4 rounded transition-colors";
+    const linkClass = "text-gray-600 hover:text-gray-900 transition-colors font-medium";
+    const mobileLinkClass = "block py-2 text-gray-600 hover:bg-warm-50 px-4 rounded-lg transition-colors";
 
     return (
-        <nav className="bg-white/95 backdrop-blur-sm shadow-lg border-b border-gray-300">
+        <nav className="bg-white/98 backdrop-blur-sm shadow-sm border-b border-gray-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-20">
-                    {/* Logo izquierda */}
-                    <div className="flex items-center">
+                    {/* Logo - Desktop: izquierda, Mobile: centro */}
+                    <div className="flex items-center w-32 h-auto md:static absolute left-1/2 transform -translate-x-1/2 md:translate-x-0">
                         <Link to="/" className="text-2xl font-bold text-black hover:text-gray-800 transition-colors">
-                            SOMOSLOLA
+                            <img src="/Logo.png" alt="LOLA COLLECTION Logo" className="w-full h-auto" />
                         </Link>
                     </div>
 
-                    {/* Nombre comercial centro */}
-                    <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:block">
+                    {/* Nombre comercial centro - Solo desktop */}
+                    <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:block pointer-events-none">
                         <h1 className="text-3xl font-serif text-black tracking-wide">
-                            LOLA COLLECTION
+
                         </h1>
                     </div>
 
@@ -42,7 +43,7 @@ export default function Navbar() {
                     <div className="hidden md:flex items-center space-x-4">
                         {/* Carrito - SIEMPRE visible */}
                         <Link to="/cart" className="relative text-gray-700 hover:text-black transition">
-                            🛒
+                            <FaShoppingCart size={20} />
                             {itemsCount > 0 && (
                                 <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
                                     {itemsCount}
@@ -130,12 +131,12 @@ export default function Navbar() {
                 <>
                     {/* Backdrop */}
                     <div
-                        className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                        className="fixed inset-0 bg-black/50 z-[200] md:hidden"
                         onClick={() => setIsMobileMenuOpen(false)}
                     />
 
                     {/* Menu Drawer */}
-                    <div className="fixed right-0 top-0 h-full w-64 bg-white shadow-2xl z-50 md:hidden overflow-y-auto">
+                    <div className="fixed right-0 top-0 h-full w-64 bg-white shadow-2xl z-[210] md:hidden overflow-y-auto animate-slideInRight">
                         <div className="p-4">
                             {/* Close button */}
                             <div className="flex justify-end mb-4">
